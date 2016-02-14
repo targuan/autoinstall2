@@ -1,0 +1,40 @@
+.left-menu {
+    width: 16em;
+    top:0px;
+    bottom:0px;
+    left:0px;
+    overflow-y: auto;
+    position:fixed;
+    
+    background-color: #37474F;
+    box-shadow:0px 0px 5px 2px black;
+    color:rgba(255, 255, 255, 0.560784);
+    margin:0 0 0 0;
+    
+    z-index:10;
+}
+
+.left-menu ul {
+    list-style-type: none;
+    padding: 0 0 0 0;
+    margin: 0 0 0 0;
+}
+.left-menu li {
+    padding: 10px 10px 10px 10px;
+    margin: 0 0 0 0;
+}
+.left-menu li:not(.title):hover, .left-menu a:hover{
+    background: rgb(64,196,255);
+    color: #37474F;
+}
+.left-menu li.title {
+    background-color:#263238;
+    color: #eceff1;
+    margin: 0 0 10 0;
+}
+.left-menu a {
+    display:block;
+    margin:-10 -10 -10 -10;
+    padding: 10 10 10 10;
+    color:rgba(255, 255, 255, 0.560784);
+}

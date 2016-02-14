@@ -1,0 +1,68 @@
+body {
+    margin: 0 0 0 0;
+    font-family: Roboto, Helvetica, sans-serif;
+    font-size:14px;
+    background-color: #f0f0f0;
+    margin-left:16em;
+    margin-bottom:5em;
+
+    padding-left:3em;
+    padding-right: 3em;
+}
+a {
+    text-decoration: none;
+}
+.partition {
+    margin:2em 0em 0em 0em;
+    background-color:white;
+    box-shadow:1px 1px 2px 0px grey,0px 0px 2px 0px grey;
+    padding:2 10 2 10;
+}
+.partition table {
+    width: 100%;
+    border-collapse:collapse;
+}
+.partition td {
+    border-top: 1px solid #e0e0e0;
+}
+.partition tr th:first-child {
+    width:1px;
+    white-space:nowrap;
+}
+button {
+    background-color: rgba(0, 0, 255, 0);
+    border: 0px solid black;
+    padding:10px 1em 10px 1em;
+}
+button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+
+}
+
+td input {
+    width:100%;
+    border: none;
+    font-family: Roboto, Helvetica, sans-serif;
+    font-size:16px;
+}
+
+.footer {
+    background-color:white;
+    box-shadow:1px 1px 2px 0px grey,0px 0px 2px 0px grey;
+    padding:2 10 2 10;
+    position: fixed;
+    bottom:0px;
+    left:0px;
+    right:0px;
+    z-index: 5;
+    padding-left: 20em;
+    max-height:3em;
+    overflow-x: auto;
+}
+
+.partition textarea {
+    width:100%;
+    height:100%; 
+    box-sizing: border-box;   
+    min-height: 10em;
+}
