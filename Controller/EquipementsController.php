@@ -98,7 +98,7 @@ class EquipementsController extends AppController {
                 $n++;
                 $equipement = array();
                 $variables = array();
-                $values = explode(',',trim($line));
+                $values = explode($separator,trim($line));
                 $variables = array_combine($keys, $values);
                 
                 foreach(array('hostname','template','mac') as $key) {
