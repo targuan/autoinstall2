@@ -110,9 +110,10 @@ class EquipementsController extends AppController {
                     
                     debug($mac);
                     debug($vmac);
-                    debug($variables['mac']);
+                    
                 }
                 $variables['mac'] = $mac;
+                debug($variables);
                 
                 foreach(array('hostname','template','mac') as $key) {
                     if(!isset($variables[$key]) or empty($variables[$key])) {
