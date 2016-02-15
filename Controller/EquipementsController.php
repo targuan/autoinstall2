@@ -88,9 +88,11 @@ class EquipementsController extends AppController {
     
     public function import() {
         if ($this->request->is('post')) {
+            debug($this->request->data);
+            $separator = $this->request->data['separator'];
             $equipements = array();
             $file = fopen($this->request->data['Equipement']['File']['tmp_name'],'r');
-            $keys = explode(',',trim(fgets($file)));
+            $keys = explode($separator,trim(fgets($file)));
             $n = 1;
             while($line = fgets($file)) {
                 $n++;
@@ -118,6 +120,8 @@ class EquipementsController extends AppController {
             } else {
                 throw new InternalErrorException("Error importing");
             }
+        } else {
+            $this->request->data['separator'] = ',';
         }
     }
     
