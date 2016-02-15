@@ -100,6 +100,15 @@ class EquipementsController extends AppController {
                 $variables = array();
                 $values = explode($separator,trim($line));
                 $variables = array_combine($keys, $values);
+                $mac = preg_replace('`[a-f0-9]`i',$variables['mac']);
+                if($this->request->data['Equipement']['basemac']) {
+                    $delta = $this->request->data['Equipement']['delta'];
+                    
+                    $vmac = hexdec(substr($mac,6));
+                    $vmac += $delta;
+                    $mac = substr($mac,6) . dechex($vmac);
+                }
+                $variables['mac'] = $mac;
                 
                 foreach(array('hostname','template','mac') as $key) {
                     if(!isset($variables[$key]) or empty($variables[$key])) {
@@ -122,6 +131,8 @@ class EquipementsController extends AppController {
             }
         } else {
             $this->request->data['Equipement']['separator'] = ',';
+            $this->request->data['Equipement']['basemac'] = true;
+            $this->request->data['Equipement']['delta'] = '71';
         }
     }
     
