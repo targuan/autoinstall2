@@ -107,6 +107,10 @@ class EquipementsController extends AppController {
                     $vmac = hexdec(substr($mac,6));
                     $vmac += $delta;
                     $mac = substr($mac,6) . dechex($vmac);
+                    
+                    debug($mac);
+                    debug($vmac);
+                    debug($variables['mac']);
                 }
                 $variables['mac'] = $mac;
                 
