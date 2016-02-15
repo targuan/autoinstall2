@@ -112,8 +112,7 @@ class EquipementsController extends AppController {
                     debug($vmac);
                     
                 }
-                $variables['mac'] = $mac;
-                debug($variables);
+                $variables['mac'] = substr(chunk_split($mac,2,':'),0,17);
                 
                 foreach(array('hostname','template','mac') as $key) {
                     if(!isset($variables[$key]) or empty($variables[$key])) {
