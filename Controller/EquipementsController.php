@@ -100,7 +100,7 @@ class EquipementsController extends AppController {
                 $variables = array();
                 $values = explode($separator,trim($line));
                 $variables = array_combine($keys, $values);
-                $mac = preg_replace('`[a-f0-9]`i',$variables['mac']);
+                $mac = preg_replace('`[a-f0-9]`i','',$variables['mac']);
                 if($this->request->data['Equipement']['basemac']) {
                     $delta = $this->request->data['Equipement']['delta'];
                     
