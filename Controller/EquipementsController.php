@@ -89,7 +89,7 @@ class EquipementsController extends AppController {
     public function import() {
         if ($this->request->is('post')) {
             debug($this->request->data);
-            $separator = $this->request->data['separator'];
+            $separator = $this->request->data['Equipement']['separator'];
             $equipements = array();
             $file = fopen($this->request->data['Equipement']['File']['tmp_name'],'r');
             $keys = explode($separator,trim(fgets($file)));
@@ -121,7 +121,7 @@ class EquipementsController extends AppController {
                 throw new InternalErrorException("Error importing");
             }
         } else {
-            $this->request->data['separator'] = ',';
+            $this->request->data['Equipement']['separator'] = ',';
         }
     }
     
