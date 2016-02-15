@@ -38,3 +38,9 @@
     padding: 10 10 10 10;
     color:rgba(255, 255, 255, 0.560784);
 }
+
+@media (max-width:640px) {
+    .left-menu {
+        transform: translateX(-17em);
+    }
+}

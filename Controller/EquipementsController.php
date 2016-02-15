@@ -56,8 +56,9 @@ class EquipementsController extends AppController {
 
         if ($this->request->is(array('post', 'put'))) {
             $this->Equipement->id = $id;
-            if ($this->Equipement->save($this->request->data)) {
+            if ($this->Equipement->saveAssociated($this->request->data)) {
                 $this->Flash->success(__('Your equipement has been updated.'));
+                
                 return $this->redirect(array('action' => 'view', $id));
             }
             $this->Flash->error(__('Unable to update your equipement.'));
@@ -106,11 +107,7 @@ class EquipementsController extends AppController {
                     
                     $vmac = hexdec(substr($mac,6));
                     $vmac += $delta;
-                    $mac = substr($mac,6) . dechex($vmac);
-                    
-                    debug($mac);
-                    debug($vmac);
-                    
+                    $mac = substr($mac,0,6) . str_pad(dechex($vmac), 6, "0", STR_PAD_LEFT);
                 }
                 $variables['mac'] = substr(chunk_split($mac,2,':'),0,17);
                 
@@ -129,14 +126,13 @@ class EquipementsController extends AppController {
                 $equipements[] = $equipement;
             }
             if($this->Equipement->saveMany($equipements,array('deep'=>true))) {
-                
+                $this->Flash->success(
+                    __('%s have been been imported.', count($equipements))
+                );
+                return $this->redirect(array('action' => 'index'));
             } else {
                 throw new InternalErrorException("Error importing");
             }
-        } else {
-            $this->request->data['Equipement']['separator'] = ',';
-            $this->request->data['Equipement']['basemac'] = true;
-            $this->request->data['Equipement']['delta'] = '71';
         }
     }
     
@@ -149,6 +145,15 @@ class EquipementsController extends AppController {
         }
         
         return $this->redirect(array('action' => 'index'));
+    }
+    
+    public function dropVariable() {
+        $this->loadModel('Variable');
+        if ($this->request->is('post')) {
+            $this->Variable->deleteAll(array(
+                    "Variable.id"=>$this->request->data['ids'] 
+                ));
+        }
     }
 
 }
