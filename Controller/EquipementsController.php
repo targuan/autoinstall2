@@ -155,5 +155,26 @@ class EquipementsController extends AppController {
                 ));
         }
     }
+    
+    public function get($id) {
+        if (!$id) {
+            throw new NotFoundException(__('Invalid switch'));
+        }
+        $equipement = $this->Equipement->findById($id);
+        if (!$equipement) {
+            throw new NotFoundException(__('Invalid equipement'));
+        }
+        $bname = basename($equipement['Equipement']['template']);
+        $template_file = WWW_ROOT . "documents" . DS . $bname;
+        if (!is_file($template_file)) {
+            throw new NotFoundException("$template_file not found");
+        }
+        $template = file_get_contents($template_file);
+        $this->layout = false;
+        $this->set('equipement', $equipement);
+        $this->set('template',$template);
+        
+        $this->response->type('text/plain');
+    }
 
 }

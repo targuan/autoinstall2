@@ -33,6 +33,11 @@
 
 <div class="partition">
     <?php
+    echo $this->Html->link("Get configuration", array('controller' => 'equipements',
+        'action' => 'get',
+        $equipement['Equipement']['id']));
+    ?>
+    <?php
     echo $this->Html->link("Edit", array('controller' => 'equipements',
         'action' => 'edit',
         $equipement['Equipement']['id']));

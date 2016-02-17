@@ -13,15 +13,13 @@
  * @since         CakePHP(tm) v 0.10.0.1076
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
-$cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework');
-$cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
+
 ?>
 <!DOCTYPE html>
 <html>
     <head>
         <?php echo $this->Html->charset(); ?>
         <title>
-            <?php echo $cakeDescription ?>:
             <?php echo $this->fetch('title'); ?>
         </title>
         <?php

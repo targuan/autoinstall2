@@ -6,7 +6,6 @@
         echo $this->Form->input('mac');
         echo $this->Form->input('template');
         foreach($this->data['Variable'] as $key=>$variable):
-            //debug($key;)
             echo $this->Form->hidden("Variable.$key.id");
             echo $this->Form->hidden("Variable.$key.equipement_id");
             ?> <div> <?php
@@ -16,8 +15,20 @@
         endforeach;
         echo $this->Form->end('Save Post');
         
-        
+        $this->append('script',<<<EDOC
+                <script>
+                    lastkey=$key
+                    function addVariable() {
+                        lastkey = lastkey + 1
+                        $("#EquipementEditForm").append('<input type="hidden" name="data[Variable]['+lastkey+'][equipement_id]" value="{$this->data['Equipement']['id']}" id="Variable'+lastkey+'EquipementId">')
+                        console.log(lastkey);
+                        return false;
+                    }
+                </script>;
+EDOC
+        );
     ?>
+    <button onclick="addVariable()">a</button>
     
 </div>
 
