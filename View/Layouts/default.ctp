@@ -44,7 +44,7 @@
         </div>
         <div class="footer">
             <p><?php echo $this->Flash->render() ?></p>
-            <?php echo $this->element('sql_dump'); ?>
+            <?php /*echo $this->element('sql_dump');*/ ?>
         </div>
     </body>
 </html>

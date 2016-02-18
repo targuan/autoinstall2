@@ -1,4 +1,5 @@
 <div class="partition">
+    <h1><?php echo $equipement['Equipement']['hostname']; ?></h1>
     <button form="EquipementDropVariableForm" type="submit">Delete variable</button>
     <table>
         <thead>
@@ -17,6 +18,7 @@
             </tr>
         <?php endforeach; ?>
         <?php echo $this->Form->create('Equipement',array('action'=>"dropVariable","method"=>"post")); ?>
+        <?php echo $this->Form->hidden('id',array('value'=>$equipement['Equipement']['id'])); ?>
         <?php foreach ($equipement['Variable'] as $variable): ?>
             <tr>
                 <td><input type="checkbox" name="ids[]" value="<?php echo $variable['id'] ?>" /></td>
@@ -27,7 +29,6 @@
         <?php echo $this->Form->end(); ?>
         </tbody>
     </table>
-    <h1><?php echo $equipement['Equipement']['hostname']; ?></h1>
 </div>
 
 

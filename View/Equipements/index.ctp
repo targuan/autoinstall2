@@ -6,7 +6,7 @@
                         array('controller' => 'equipements', 
                         'action' => 'import'),array("class"=>"button")); ?>
     <button form="EquipementPurgeForm" type="submit">Delete</button>
-    
+    <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"export")) ?>">Export</button>
     <table>
         <thead>
             <tr>

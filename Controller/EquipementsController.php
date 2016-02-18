@@ -58,7 +58,7 @@ class EquipementsController extends AppController {
             $this->Equipement->id = $id;
             if ($this->Equipement->saveAssociated($this->request->data)) {
                 $this->Flash->success(__('Your equipement has been updated.'));
-                
+
                 return $this->redirect(array('action' => 'view', $id));
             }
             $this->Flash->error(__('Unable to update your equipement.'));
@@ -73,7 +73,7 @@ class EquipementsController extends AppController {
         if (!$id) {
             throw new NotFoundException(__('Invalid equipement'));
         }
-        
+
         if ($this->Equipement->delete($id)) {
             $this->Flash->success(
                     __('The equipement with id: %s has been deleted.', h($id))
@@ -86,48 +86,48 @@ class EquipementsController extends AppController {
 
         return $this->redirect(array('action' => 'index'));
     }
-    
+
     public function import() {
         if ($this->request->is('post')) {
-            
+
             $separator = $this->request->data['Equipement']['separator'];
             $equipements = array();
-            $file = fopen($this->request->data['Equipement']['File']['tmp_name'],'r');
-            $keys = explode($separator,trim(fgets($file)));
+            $file = fopen($this->request->data['Equipement']['File']['tmp_name'], 'r');
+            $keys = explode($separator, trim(fgets($file)));
             $n = 1;
-            while($line = fgets($file)) {
+            while ($line = fgets($file)) {
                 $n++;
                 $equipement = array();
                 $variables = array();
-                $values = explode($separator,trim($line));
+                $values = explode($separator, trim($line));
                 $variables = array_combine($keys, $values);
-                $mac = preg_replace('`[^a-f0-9]`i','',$variables['mac']);
-                if($this->request->data['Equipement']['basemac']) {
+                $mac = preg_replace('`[^a-f0-9]`i', '', $variables['mac']);
+                if ($this->request->data['Equipement']['basemac']) {
                     $delta = $this->request->data['Equipement']['delta'];
-                    
-                    $vmac = hexdec(substr($mac,6));
+
+                    $vmac = hexdec(substr($mac, 6));
                     $vmac += $delta;
-                    $mac = substr($mac,0,6) . str_pad(dechex($vmac), 6, "0", STR_PAD_LEFT);
+                    $mac = substr($mac, 0, 6) . str_pad(dechex($vmac), 6, "0", STR_PAD_LEFT);
                 }
-                $variables['mac'] = substr(chunk_split($mac,2,':'),0,17);
-                
-                foreach(array('hostname','template','mac') as $key) {
-                    if(!isset($variables[$key]) or empty($variables[$key])) {
+                $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
+
+                foreach (array('hostname', 'template', 'mac') as $key) {
+                    if (!isset($variables[$key]) or empty($variables[$key])) {
                         throw new InternalErrorException("$key not found at line $n");
                     }
                     $equipement['Equipement'][$key] = $variables[$key];
                     unset($variables[$key]);
                 }
-                foreach($variables as $name=>$value) {
-                    $equipement['Variable'][] = array('name'=>$name,
-                            "value"=>$value);
+                foreach ($variables as $name => $value) {
+                    $equipement['Variable'][] = array('name' => $name,
+                        "value" => $value);
                 }
-                
+
                 $equipements[] = $equipement;
             }
-            if($this->Equipement->saveMany($equipements,array('deep'=>true))) {
+            if ($this->Equipement->saveMany($equipements, array('deep' => true))) {
                 $this->Flash->success(
-                    __('%s have been been imported.', count($equipements))
+                        __('%s have been been imported.', count($equipements))
                 );
                 return $this->redirect(array('action' => 'index'));
             } else {
@@ -135,27 +135,37 @@ class EquipementsController extends AppController {
             }
         }
     }
-    
+
     public function purge() {
-        
+
         if ($this->request->is('post')) {
             $this->Equipement->deleteAll(array(
-                "Equipement.id"=>$this->request->data['ids']
+                "Equipement.id" => $this->request->data['ids']
             ));
         }
-        
+
         return $this->redirect(array('action' => 'index'));
     }
-    
+
     public function dropVariable() {
         $this->loadModel('Variable');
         if ($this->request->is('post')) {
-            $this->Variable->deleteAll(array(
-                    "Variable.id"=>$this->request->data['ids'] 
-                ));
+            if ($this->Variable->deleteAll(array(
+                        "Variable.id" => $this->request->data['ids'],
+                        "Variable.equipement_id" => $this->request->data['Equipement']['id']
+                    ))) {
+                $this->Flash->success(
+                        __('Variables have been deleted.')
+                );
+                return $this->redirect(array('action' => 'view', $this->request->data['Equipement']['id']));
+            } else {
+                $this->Flash->error(
+                        __('An error has occured while deleting variables.')
+                );
+            }
         }
     }
-    
+
     public function get($id) {
         if (!$id) {
             throw new NotFoundException(__('Invalid switch'));
@@ -172,9 +182,89 @@ class EquipementsController extends AppController {
         $template = file_get_contents($template_file);
         $this->layout = false;
         $this->set('equipement', $equipement);
-        $this->set('template',$template);
-        
+        $this->set('template', $template);
+
         $this->response->type('text/plain');
+    }
+
+    public function getVariables($id) {
+        if (!$id) {
+            throw new NotFoundException(__('Invalid switch'));
+        }
+        $equipement = $this->Equipement->findById($id);
+        if (!$equipement) {
+            throw new NotFoundException(__('Invalid equipement'));
+        }
+        $bname = basename($equipement['Equipement']['template']);
+        $template_file = WWW_ROOT . "documents" . DS . $bname;
+        if (!is_file($template_file)) {
+            throw new NotFoundException("$template_file not found");
+        }
+        $template = file_get_contents($template_file);
+
+        preg_match_all('`<([^>]+)>`', $template, $res);
+        $variables = array_unique($res[1]);
+
+        foreach ($equipement['Equipement'] as $name => $value) {
+            if (($key = array_search($name, $variables)) !== false) {
+                unset($variables[$key]);
+            }
+        }
+        foreach ($equipement['Variable'] as $variable) {
+            if (($key = array_search($variable['name'], $variables)) !== false) {
+                unset($variables[$key]);
+            }
+        }
+        foreach ($variables as $name) {
+            $equipement['Variable'][] = array(
+                "equipement_id" => $equipement['Equipement']['id'],
+                'name' => $name, "value" => "");
+        }
+
+        if ($this->Equipement->saveAssociated($equipement)) {
+            $this->Flash->success(__('Your equipement has been updated.'));
+        } else {
+            $this->Flash->error(__('Unable to update your equipement.'));
+        }
+        return $this->redirect(array('action' => 'edit', $id));
+    }
+
+    public function export() {
+        if ($this->request->is('post') && isset($this->request->data['ids'])) {
+            $equipements = $this->Equipement->find('all', array(
+                "conditions" => array("Equipement.id" => $this->request->data['ids'])
+            ));
+            $variables = array();
+
+            foreach ($equipements as $id=>$equipement) {
+                foreach ($equipement['Equipement'] as $key => $value) {
+                    $equipements[$id]['Values'][$key] = $value;
+                    $variables[] = $key;
+                }
+                foreach ($equipement['Variable'] as $variable) {
+                    $equipements[$id]['Values'][$variable['name']] = $variable['value'];
+                    $variables[] = $variable['name'];
+                }
+            }
+            $variables = array_unique($variables);
+            $values = array();
+            foreach ($equipements as $equipement) {
+                foreach ($variables as $variable) {
+                    if(!isset($equipement['Values'][$variable])) {
+                        $values[$equipement['Equipement']['id']][] = "";
+                    } else {
+                        $values[$equipement['Equipement']['id']][] = $equipement['Values'][$variable];
+                    }
+                }
+            }
+            $this->set('variables', $variables);
+            $this->set('values', $values);
+            $this->set("equipements", $equipements);
+            $this->layout = false;
+            $this->response->type('text/plain');
+        } else {
+            return $this->redirect(array('action' => 'index'));
+        }
     }
 
 }
