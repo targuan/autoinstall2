@@ -16,24 +16,23 @@ class EquipementsController extends AppController {
 
     public $helpers = array('Html', 'Form', 'Flash');
     public $components = array('Flash');
-    
-        
+
     private static function getConfigurationFromTemplate($equipement) {
         $template = "";
-        
+
         $bname = basename($equipement['Equipement']['template']);
         $template_file = WWW_ROOT . "documents" . DS . $bname;
         if (!is_file($template_file)) {
             throw new NotFoundException("$template_file not found");
         }
         $template = file_get_contents($template_file);
-        foreach($equipement['Equipement'] as $name=>$value) {
-            $template = str_replace("<$name>",$value,$template);
+        foreach ($equipement['Equipement'] as $name => $value) {
+            $template = str_replace("<$name>", $value, $template);
         }
-        foreach($equipement['Variable'] as $variable) {
-            $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
+        foreach ($equipement['Variable'] as $variable) {
+            $template = str_replace("<{$variable['name']}>", $variable['value'], $template);
         }
-         
+
         return $template;
     }
 
@@ -256,7 +255,7 @@ class EquipementsController extends AppController {
             ));
             $variables = array();
 
-            foreach ($equipements as $id=>$equipement) {
+            foreach ($equipements as $id => $equipement) {
                 foreach ($equipement['Equipement'] as $key => $value) {
                     $equipements[$id]['Values'][$key] = $value;
                     $variables[] = $key;
@@ -270,7 +269,7 @@ class EquipementsController extends AppController {
             $values = array();
             foreach ($equipements as $equipement) {
                 foreach ($variables as $variable) {
-                    if(!isset($equipement['Values'][$variable])) {
+                    if (!isset($equipement['Values'][$variable])) {
                         $values[$equipement['Equipement']['id']][] = "";
                     } else {
                         $values[$equipement['Equipement']['id']][] = $equipement['Values'][$variable];
@@ -286,28 +285,33 @@ class EquipementsController extends AppController {
             return $this->redirect(array('action' => 'index'));
         }
     }
-    
+
     public function getConfigurations() {
         //debug($this->request->data);
         if ($this->request->is('post') && isset($this->request->data['ids'])) {
             $zip = new ZipArchive;
-            $filename = TMP."cache/".uniqid("configurations").".zip";
+            $filename = TMP . "cache/" . uniqid("configurations") . ".zip";
             $res = $zip->open($filename, ZipArchive::CREATE);
 
             $equipements = $this->Equipement->find('all', array(
                 "conditions" => array("Equipement.id" => $this->request->data['ids'])
             ));
-            foreach($equipements as $equipement) {
-                $zip->addFromString("{$equipement['Equipement']['hostname']}-confg", 
-                        self::getConfigurationFromTemplate($equipement));
+            $networkconfg = "";
+            foreach ($equipements as $equipement) {
+                $zip->addFromString("{$equipement['Equipement']['hostname']}-confg", self::getConfigurationFromTemplate($equipement));
+                foreach($equipement['Variable'] as $variable) {
+                    if(in_array($variable['name'],array("ip","admip","selfip"))) {
+                        $networkconfg .= "ip host {$equipement['Equipement']['hostname']} {$variable['value']}\n";
+                    }
+                }
             }
-
-            if($zip->close()) {
+            
+            $zip->addFromString("network-confg", "$networkconfg");
+            if ($zip->close()) {
                 $this->response->download('configurations.zip');
                 $this->response->file($filename);
                 return $this->response;
-            }
-            else {
+            } else {
                 return $this->redirect(array('action' => 'index'));
             }
         } else {
