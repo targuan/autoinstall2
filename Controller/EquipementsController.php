@@ -303,6 +303,7 @@ class EquipementsController extends AppController {
             }
 
             if($zip->close()) {
+                $this->response->download('configurations.zip');
                 $this->response->file($filename);
                 return $this->response;
             }
