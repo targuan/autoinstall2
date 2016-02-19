@@ -13,7 +13,6 @@ App::uses('AppModel', 'Model');
  * @author targuan
  */
 class Equipement extends AppModel {
-
     public $validate = array(
         'hostname' => array(
             'rule' => 'notBlank'
@@ -25,6 +24,6 @@ class Equipement extends AppModel {
             'rule' => 'notBlank'
         )
     );
+    
     public $hasMany = 'Variable';
-
 }

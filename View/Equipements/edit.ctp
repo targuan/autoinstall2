@@ -14,7 +14,7 @@
             echo $this->Form->input("Variable.$key.value",array('label'=>false,"type"=>"text",'div'=>false));
             ?> </div> <?php
         endforeach;
-        echo $this->Form->end('Save Post');
+        echo $this->Form->end('Save Equipement',array('div'=>false));
         
         $this->append('script',<<<EDOC
                 <script>

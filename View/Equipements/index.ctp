@@ -7,6 +7,7 @@
                         'action' => 'import'),array("class"=>"button")); ?>
     <button form="EquipementPurgeForm" type="submit">Delete</button>
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"export")) ?>">Export</button>
+    <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"getConfigurations")) ?>">Download</button>
     <table>
         <thead>
             <tr>
