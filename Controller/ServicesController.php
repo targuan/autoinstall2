@@ -46,6 +46,12 @@ class ServicesController extends AppController {
         $template = file_get_contents("/etc/dhcp/dhcpd.conf.template");
         $this->loadModel('Equipement');
         $equipements = $this->Equipement->find('all');
+        $services = $this->Service->findByName('tftpaddress');
+        if(count($services) == 0) {
+            $this->Flash->error("I didn't found the tftp address");
+            return $this->redirect(array('action' => 'index'));
+        }
+        $tftp = $services['Service']['value'];
         
         $content = "";
         foreach($equipements as $equipement) {
@@ -60,7 +66,7 @@ class ServicesController extends AppController {
             }
             $hostname = $equipement['Equipement']['hostname'];
             $mac = $equipement['Equipement']['mac'];
-            $content .= "host $hostname { hardware ethernet $mac; fixed-address $ip; option option-150 192.168.1.5;}\n";
+            $content .= "host $hostname { hardware ethernet $mac; fixed-address $ip; option option-150 $tftp;}\n";
         }
         $template = str_replace("##autoinstall", $content, $template);
         file_put_contents("/etc/dhcp/dhcpd.conf", $template);
@@ -95,5 +101,17 @@ class ServicesController extends AppController {
         
         $this->Flash->success('Files generated');
         return $this->redirect(array('action' => 'index'));
+    }
+    
+    public function edit() {
+        if ($this->request->is(array('post', 'put'))) {
+            $this->Service->saveMany($this->request->data['Service']);
+        }
+        else {
+            $services = $this->Service->find('all');
+            foreach($services as $service) {
+	        $this->request->data['Service'][] = $service['Service'];
+            }
+        }
     }
 }
