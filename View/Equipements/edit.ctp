@@ -4,6 +4,7 @@
         echo $this->Form->hidden('id');
         echo $this->Form->input('hostname');
         echo $this->Form->input('mac');
+        echo $this->Form->input('ip');
         echo $this->Form->input('template');
         $key=0;
         foreach($this->data['Variable'] as $key=>$variable):
