@@ -130,7 +130,7 @@ class EquipementsController extends AppController {
                 }
                 $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
 
-                foreach (array('hostname', 'template', 'mac') as $key) {
+                foreach (array('hostname', 'template', 'mac','ip') as $key) {
                     if (!isset($variables[$key]) or empty($variables[$key])) {
                         throw new InternalErrorException("$key not found at line $n");
                     }
@@ -299,11 +299,7 @@ class EquipementsController extends AppController {
             $networkconfg = "";
             foreach ($equipements as $equipement) {
                 $zip->addFromString("{$equipement['Equipement']['hostname']}-confg", self::getConfigurationFromTemplate($equipement));
-                foreach($equipement['Variable'] as $variable) {
-                    if(in_array($variable['name'],array("ip","admip","selfip"))) {
-                        $networkconfg .= "ip host {$equipement['Equipement']['hostname']} {$variable['value']}\n";
-                    }
-                }
+                $networkconfg .= "ip host {$equipement['Equipement']['hostname']} {$equipement['Equipement']['ip']}\n";
             }
             
             $zip->addFromString("network-confg", "$networkconfg");

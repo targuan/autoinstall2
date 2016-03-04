@@ -55,15 +55,7 @@ class ServicesController extends AppController {
         
         $content = "";
         foreach($equipements as $equipement) {
-            $ip = null;
-            foreach($equipement['Variable'] as $variable) {
-                if($variable['name'] == "ip") {
-                    $ip = $variable['value'];
-                }
-            }
-            if($ip == null) {
-                continue;
-            }
+            $ip = $equipement['Equipement']['ip'];
             $hostname = $equipement['Equipement']['hostname'];
             $mac = $equipement['Equipement']['mac'];
             $content .= "host $hostname { hardware ethernet $mac; fixed-address $ip; option option-150 $tftp;}\n";
@@ -82,15 +74,12 @@ class ServicesController extends AppController {
         foreach($equipements as $equipement) {
             $template_name = $equipement['Equipement']['template'];
             $template = file_get_contents(WWW_ROOT . DS . "documents" . DS . $template_name);
-            $ip = "";
+            $ip = $equipement['Equipement']['ip'];
             foreach($equipement['Equipement'] as $key=>$value) {
                 $template = str_replace("<$key>",$value,$template);
             }
             foreach($equipement['Variable'] as $variable) {
                 $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
-                if($variable['name'] == "ip") {
-                    $ip = $variable['value'];
-                }
             }
             file_put_contents("/srv/tftp/{$equipement['Equipement']['hostname']}-confg",$template);
             
