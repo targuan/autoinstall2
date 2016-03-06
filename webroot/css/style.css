@@ -25,7 +25,7 @@ a {
 .partition td {
     border-top: 1px solid #e0e0e0;
 }
-.partition tr th:first-child {
+.partition .editable tr th:first-child {
     width:1px;
     white-space:nowrap;
 }
@@ -33,10 +33,16 @@ button, a.button {
     background-color: rgba(0, 0, 255, 0);
     border: 0px solid black;
     padding:10px 1em 10px 1em;
+    display:inline-block;
+    color: black;
 }
 button:hover, a.button:hover {
     background-color: rgba(200, 200, 200, 0.5);
 
+}
+
+th {
+    text-align:left;
 }
 
 td input {

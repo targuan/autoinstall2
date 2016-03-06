@@ -8,7 +8,7 @@
     <button form="EquipementPurgeForm" type="submit">Delete</button>
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"export")) ?>">Export</button>
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"getConfigurations")) ?>">Download</button>
-    <table>
+    <table class="editable">
         <thead>
             <tr>
                 <th><input type="checkbox" class="checkall" /></th>

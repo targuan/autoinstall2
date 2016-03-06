@@ -1,7 +1,7 @@
 <div class="partition">
     <h1><?php echo $equipement['Equipement']['hostname']; ?></h1>
     <button form="EquipementDropVariableForm" type="submit">Delete variable</button>
-    <table>
+    <table class="editable">
         <thead>
             <tr>
                 <th><input type="checkbox" class="checkall" /></th>

@@ -10,6 +10,8 @@
         <li> <?php echo $this->Html->link("Templates",
                                         array('controller' => 'templates', 
                                               'action' => 'index')); ?></li>
-        <li>Parameters</li>
+        <li> <?php echo $this->Html->link("Parameters",
+                                        array('controller' => 'parameters', 
+                                              'action' => 'index')); ?></li>
     </ul>
 </div>
