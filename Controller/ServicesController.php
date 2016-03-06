@@ -15,37 +15,53 @@ App::uses('AppController', 'Controller');
 class ServicesController extends AppController {
 
     public function index() {
+       
         $status = exec("/usr/sbin/service isc-dhcp-server status",$output,$code);
         $this->set("status",$output);
         $this->set("result",$code);
     }
     
-    public function reloaddhcp() {
-        exec("sudo /usr/sbin/service isc-dhcp-server restart 2>&1",$output,$code);
-        if($code == 0) {
-            $this->Flash->success('Service restarted');
+    private function exec($cmd) {
+        if(!empty($cmd)) {
+            exec($cmd['Service']['value'],$output,$code);
+            if($code == 0) {
+                $this->Flash->success('Service restarted');
+            } else {
+                $this->Flash->error('Service failed: '.implode($output));
+            }
+            return $output;
         } else {
-            $this->Flash->error('Service failed: '.implode($output));
+            $this->Flash->error("Can't find parameters.");
         }
+    }
+    
+    public function reloaddhcp() {
+        $cmd = $this->Service->findByName('dhcpdreload');
+        $this->exec($cmd);
         return $this->redirect(array('action' => 'index'));
         
     }
     
     public function reloadtftp() {
-        exec("sudo /usr/sbin/service atftpd restart 2>&1",$output,$code);
-        if($code == 0) {
-            $this->Flash->success('Service restarted');
-        } else {
-            $this->Flash->error('Service failed: '.implode($output));
-        }
+        $cmd = $this->Service->findByName('tftpdreload');
+        $this->exec($cmd);
         return $this->redirect(array('action' => 'index'));
         
     }
     
     public function generatedhcp() {
-        $template = file_get_contents("/etc/dhcp/dhcpd.conf.template");
-        $this->loadModel('Equipement');
-        $equipements = $this->Equipement->find('all');
+        $service = $this->Service->findByName('dhcpdtemplate');
+        if(empty($service)) {
+            $this->Flash->error("I couldn't find the dhcp template");
+            return $this->redirect(array('action' => 'index'));
+        }
+        $template = $service['Service']['value'];
+        
+        if(strpos($template,'##autoinstall') === false) {
+            $this->Flash->error("I couldn't find ##autoinstall part in the template");
+            return $this->redirect(array('action' => 'index'));
+        }
+        
         $services = $this->Service->findByName('tftpaddress');
         if(count($services) == 0) {
             $this->Flash->error("I didn't found the tftp address");
@@ -53,6 +69,8 @@ class ServicesController extends AppController {
         }
         $tftp = $services['Service']['value'];
         
+        $this->loadModel('Equipement');
+        $equipements = $this->Equipement->find('all');
         $content = "";
         foreach($equipements as $equipement) {
             $ip = $equipement['Equipement']['ip'];
@@ -61,11 +79,24 @@ class ServicesController extends AppController {
             $content .= "host $hostname { hardware ethernet $mac; fixed-address $ip; option option-150 $tftp;}\n";
         }
         $template = str_replace("##autoinstall", $content, $template);
-        file_put_contents("/etc/dhcp/dhcpd.conf", $template);
+
+        $service = $this->Service->findByName('dhcpdconffile');
+        if(empty($service)) {
+            $this->Flash->error("I couldn't find the dhcpd conf file path");
+            return $this->redirect(array('action' => 'index'));
+        }
+        file_put_contents($service['Service']['value'], $template);
         return $this->redirect(array('action' => 'reloaddhcp'));
     }
     
     public function generatetftp() {
+        $service = $this->Service->findByName('tftpdroot');
+        if(empty($service)) {
+            $this->Flash->error("I couldn't find the tftpd root path");
+            return $this->redirect(array('action' => 'index'));
+        }
+        $tftpdroot = $service['Service']['value'];
+         
         $this->loadModel('Equipement');
         $equipements = $this->Equipement->find('all');
         
@@ -81,12 +112,12 @@ class ServicesController extends AppController {
             foreach($equipement['Variable'] as $variable) {
                 $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
             }
-            file_put_contents("/srv/tftp/{$equipement['Equipement']['hostname']}-confg",$template);
+            file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$template);
             
             $network .= "ip host {$equipement['Equipement']['hostname']} {$ip}\n";
         }
         
-        file_put_contents("/srv/tftp/network-confg", $network);
+        file_put_contents("$tftpdroot/network-confg", $network);
         
         $this->Flash->success('Files generated');
         return $this->redirect(array('action' => 'index'));

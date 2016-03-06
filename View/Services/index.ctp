@@ -19,6 +19,3 @@
     </p>
 </div>
 
-<div class="partition">
-	<?php echo $this->Html->link('Edit', array('action' => 'edit')); ?>
-</div>
