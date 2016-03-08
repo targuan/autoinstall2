@@ -6,6 +6,7 @@
         echo $this->Form->input('mac');
         echo $this->Form->input('ip');
         echo $this->Form->input('template');
+        echo $this->Form->input('status');
         $key=0;
         foreach($this->data['Variable'] as $key=>$variable):
             echo $this->Form->hidden("Variable.$key.id");

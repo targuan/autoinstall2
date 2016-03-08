@@ -26,4 +26,12 @@ class Equipement extends AppModel {
     );
     
     public $hasMany = 'Variable';
+
+    public function afterFind($results,$primary=false) {
+        $values = ['init','ping','ssh','version','binary','download','md5','copy','error','finished'];
+        foreach($results as $key=>$result) {
+            if(isset($results[$key]['Equipement']['status'])) { $results[$key]['Equipement']['statusValue'] = $values[$results[$key]['Equipement']['status']]; }
+        }
+        return $results;
+    }
 }

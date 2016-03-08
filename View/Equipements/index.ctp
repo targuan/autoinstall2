@@ -15,6 +15,7 @@
                 <th>Hostname</th>
                 <th>MAC</th>
                 <th>Template</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -30,6 +31,7 @@
                     </td>
                     <td><?php echo $equipement['Equipement']['mac'] ?></td>
                     <td><?php echo $equipement['Equipement']['template'] ?></td>
+                    <td><?php echo $equipement['Equipement']['statusValue'] ?></td>
                 </tr>
             <?php endforeach; ?>
             <?php echo $this->Form->end(); ?>
