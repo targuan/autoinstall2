@@ -156,11 +156,21 @@ class EquipementsController extends AppController {
     }
 
     public function purge() {
-
         if ($this->request->is('post')) {
             $this->Equipement->deleteAll(array(
                 "Equipement.id" => $this->request->data['ids']
             ));
+        }
+
+        return $this->redirect(array('action' => 'index'));
+    }
+    
+    public function resetStatus() {
+        if ($this->request->is('post')) {
+            $this->Equipement->updateAll(
+		array('Equipement.status'=>0),
+		array('Equipement.id',$this->request->data['ids'])
+            );
         }
 
         return $this->redirect(array('action' => 'index'));
@@ -257,6 +267,7 @@ class EquipementsController extends AppController {
 
             foreach ($equipements as $id => $equipement) {
                 foreach ($equipement['Equipement'] as $key => $value) {
+                    if(!$this->Equipement->hasField($key)) continue;
                     $equipements[$id]['Values'][$key] = $value;
                     $variables[] = $key;
                 }
