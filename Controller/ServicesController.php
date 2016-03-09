@@ -91,30 +91,44 @@ class ServicesController extends AppController {
     
     public function generatetftp() {
         $service = $this->Service->findByName('tftpdroot');
+        
         if(empty($service)) {
             $this->Flash->error("I couldn't find the tftpd root path");
             return $this->redirect(array('action' => 'index'));
         }
         $tftpdroot = $service['Service']['value'];
          
+        $boottemplateservice = $this->Service->findByName('boottemplate');
+	if(empty($boottemplateservice)) {
+            $this->Flash->error("I couldn't find the boottemplate");
+            return $this->redirect(array('action' => 'index'));
+        }
+        $boottemplate = $boottemplateservice['Service']['value'];
+
         $this->loadModel('Equipement');
         $equipements = $this->Equipement->find('all');
         
         $network = "";
         
         foreach($equipements as $equipement) {
-            $template_name = $equipement['Equipement']['template'];
-            $template = file_get_contents(WWW_ROOT . DS . "documents" . DS . $template_name);
             $ip = $equipement['Equipement']['ip'];
+            $network .= "ip host {$equipement['Equipement']['hostname']} {$ip}\n";
+            
+            $template_name = $equipement['Equipement']['template'];
+            if(strpos($template_name,"slave")===0) {
+                file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$boottemplate);
+                continue;
+            }
+            
+            $template = file_get_contents(WWW_ROOT . DS . "documents" . DS . $template_name);
             foreach($equipement['Equipement'] as $key=>$value) {
                 $template = str_replace("<$key>",$value,$template);
             }
             foreach($equipement['Variable'] as $variable) {
                 $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
             }
-            file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$template);
+            file_put_contents("$tftpdroot/fullconfig/{$equipement['Equipement']['hostname']}-confg",$template);
             
-            $network .= "ip host {$equipement['Equipement']['hostname']} {$ip}\n";
         }
         
         file_put_contents("$tftpdroot/network-confg", $network);
