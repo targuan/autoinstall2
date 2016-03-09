@@ -76,7 +76,7 @@ class ServicesController extends AppController {
             $ip = $equipement['Equipement']['ip'];
             $hostname = $equipement['Equipement']['hostname'];
             $mac = $equipement['Equipement']['mac'];
-            $content .= "host $hostname { hardware ethernet $mac; fixed-address $ip; option option-150 $tftp;}\n";
+            $content .= "subclass \"switchs\" 1:$mac;\n";
         }
         $template = str_replace("##autoinstall", $content, $template);
 
