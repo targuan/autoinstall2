@@ -169,7 +169,7 @@ class EquipementsController extends AppController {
         if ($this->request->is('post')) {
             $this->Equipement->updateAll(
 		array('Equipement.status'=>0),
-		array('Equipement.id',$this->request->data['ids'])
+		array('Equipement.id'=>$this->request->data['ids'])
             );
         }
 
