@@ -113,10 +113,10 @@ class ServicesController extends AppController {
         foreach($equipements as $equipement) {
             $ip = $equipement['Equipement']['ip'];
             $network .= "ip host {$equipement['Equipement']['hostname']} {$ip}\n";
+            file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$boottemplate);
             
             $template_name = $equipement['Equipement']['template'];
             if(strpos($template_name,"slave")===0) {
-                file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$boottemplate);
                 continue;
             }
             
