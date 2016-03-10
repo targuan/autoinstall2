@@ -180,6 +180,7 @@ def testEquipement(queue,args):
             logging.info("%s provision OK"%equipement['hostname'])
             mycursor.execute("update equipements set status=%s where id=%s",(9,equipement['id']))
           else:
+            provision(net_connect,1)
             if not copyConfig(net_connect,equipement['hostname'],args):
               logging.info("%s copy KO"%equipement['hostname'])
               mycursor.execute("update equipements set status=%s where id=%s",(8,equipement['id']))
