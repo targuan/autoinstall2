@@ -44,4 +44,18 @@ class ParametersController extends AppController {
             }
         }
     }
+    
+    public function get($variable) {
+        $this->loadModel('Service');
+        if (!$variable) { 
+            throw new NotFoundException(__('Invalid variable'));
+        } 
+        $variableEntry = $this->Service->findByName($variable);
+        if(!$variableEntry) {
+            throw new NotFoundException(__('Invalid variable'));
+        }
+        $this->set('value',$variableEntry['Service']['value']);
+        $this->layout = false;
+        $this->response->type('text/plain');
+    }
 }

@@ -203,18 +203,28 @@ class EquipementsController extends AppController {
         if (!$equipement) {
             throw new NotFoundException(__('Invalid equipement'));
         }
-        $bname = basename($equipement['Equipement']['template']);
-        $template_file = WWW_ROOT . "documents" . DS . $bname;
-        if (!is_file($template_file)) {
-            throw new NotFoundException("$template_file not found");
-        }
-        $template = file_get_contents($template_file);
+        $template = $this->getConfigurationFromTemplate($equipement);
         $this->layout = false;
-        $this->set('equipement', $equipement);
         $this->set('template', $template);
 
         $this->response->type('text/plain');
     }
+
+   public function getByHostname($hostname) {
+        if(!$hostname) { 
+            throw new NotFoundException(__('Invalid switch'));
+        }
+        $equipement = $this->Equipement->findByHostname($hostname);
+        if (!$equipement) {
+            throw new NotFoundException(__('Invalid equipement'));
+        }
+        $template = $this->getConfigurationFromTemplate($equipement);
+        $this->layout = false;
+        $this->set('template', $template);
+        $this->render('get');
+
+        $this->response->type('text/plain');
+   }
 
     public function getVariables($id) {
         if (!$id) {
