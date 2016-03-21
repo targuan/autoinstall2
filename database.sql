@@ -20,8 +20,9 @@ CREATE TABLE `equipements` (
   `ip` varchar(255) DEFAULT NULL,
   `status` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1229 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1232 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 DROP TABLE IF EXISTS `services`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -32,6 +33,12 @@ CREATE TABLE `services` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+LOCK TABLES `services` WRITE;
+/*!40000 ALTER TABLE `services` DISABLE KEYS */;
+INSERT INTO `services` VALUES (3,'tftpaddress','10.20.124.50'),(4,'dhcpdtemplate','default-lease-time 60;\r\nmax-lease-time 60;\r\nlog-facility local7;\r\n\r\noption option-150 code 150 = ip-address;\r\noption option-150 10.20.124.50;\r\noption routers 10.20.124.1;\r\n\r\nclass \"switchs\" {\r\n    match hardware;\r\n  \r\n}\r\n##autoinstall\r\n\r\nsubnet 0.0.0.0 netmask 0.0.0.0 {\r\n    pool {\r\n        allow members of \"switchs\";\r\n        range 10.20.124.51 10.20.124.51;\r\n        option subnet-mask 255.255.255.192;\r\n    }\r\n}\r\n\r\n\r\n\r\n'),(5,'tftpdreload','sudo /usr/sbin/service atftpd restart 2>&1'),(6,'dhcpdreload','sudo /usr/sbin/service isc-dhcp-server restart 2>&1'),(7,'dhcpdstatus','/usr/sbin/service isc-dhcp-server status'),(8,'dhcpdconffile','/etc/dhcp/dhcpd.conf'),(9,'tftpdroot','/srv/tftp/'),(10,'boottemplate','file prompt quiet\r\ninterface vlan1\r\nip address dhcp\r\nip domain-name intranet\r\ncrypto key generate rsa modulus 1024\r\n\r\nip ssh version 2\r\n\r\naaa new-model\r\naaa authentication login default local \r\nusername local privilege 15 secret local\r\nline vty 0 15\r\ntransport input ssh\r\nprivilege level 15\r\nlogin authentication default \r\n');
+/*!40000 ALTER TABLE `services` ENABLE KEYS */;
+UNLOCK TABLES;
 DROP TABLE IF EXISTS `variables`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
@@ -43,8 +50,9 @@ CREATE TABLE `variables` (
   PRIMARY KEY (`id`),
   KEY `equipement_id` (`equipement_id`),
   CONSTRAINT `variables_ibfk_1` FOREIGN KEY (`equipement_id`) REFERENCES `equipements` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
