@@ -36,7 +36,7 @@ class TFTPServer:
       leases=self.leases.get_current()
       for mac in leases:
         file += "ip host boot %s\n"%(leases[mac].ip)
-    elif filename == 'boot-confg':
+    elif filename == 'boot-confg' or filename=='router-confg':
       try:
         fp = urllib2.urlopen('%s/parameters/get/boottemplate'%self.httproot)
         file = fp.read()
