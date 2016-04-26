@@ -100,15 +100,17 @@ def testEquipement(queue,args):
         
         logger.info("%s Binary found"%equipement['name'])
         updateStatus(myconn,mycursor,4,equipement['id'])
-        if not conn.md5sum(args.binary,args.binary_md5):
-          logger.info("%s Bad md5 for binary"%equipement['name'])
-          push(queue,equipement,args)
-          conn.disconnect()
-          continue
-        else:
-          logger.info("%s md5 OK"%equipement['name'])
-          updateStatus(myconn,mycursor,6,equipement['id'])
-          conn.upgrade(args.binary)
+        conn.upgrade(args.binary)
+        continue
+        #if not conn.md5sum(args.binary,args.binary_md5):
+        #  logger.info("%s Bad md5 for binary"%equipement['name'])
+        #  push(queue,equipement,args)
+        #  conn.disconnect()
+        #  continue
+        #else:
+        #  logger.info("%s md5 OK"%equipement['name'])
+        #  updateStatus(myconn,mycursor,6,equipement['id'])
+        #  conn.upgrade(args.binary)
       else:
         logger.info("%s version OK"%equipement['name'])
         updateStatus(myconn,mycursor,3,equipement['id'])
