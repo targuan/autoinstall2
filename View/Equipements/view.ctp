@@ -1,5 +1,5 @@
 <div class="partition">
-    <h1><?php echo $equipement['Equipement']['hostname']; ?></h1>
+    <h1><?php echo $equipement['Equipement']['name']; ?></h1>
     <button form="EquipementDropVariableForm" type="submit">Delete variable</button>
     <table class="editable">
         <thead>

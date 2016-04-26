@@ -13,7 +13,7 @@
         <thead>
             <tr>
                 <th><input type="checkbox" class="checkall" /></th>
-                <th>Hostname</th>
+                <th>Name</th>
                 <th>MAC</th>
                 <th>Template</th>
                 <th>Status</th>
@@ -25,7 +25,7 @@
                 <tr>
                     <td><input type="checkbox" name="ids[]" value="<?php echo $equipement['Equipement']['id'] ?>" /></td>
                     <td>
-                        <?php echo $this->Html->link($equipement['Equipement']['hostname'],
+                        <?php echo $this->Html->link($equipement['Equipement']['name'],
                                         array('controller' => 'equipements', 
                                               'action' => 'view', 
                                               $equipement['Equipement']['id'])); ?>

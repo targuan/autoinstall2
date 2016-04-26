@@ -16,7 +16,7 @@ CREATE TABLE `equipements` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `mac` char(17) DEFAULT NULL,
   `template` varchar(255) DEFAULT NULL,
-  `hostname` varchar(255) DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
   `ip` varchar(255) DEFAULT NULL,
   `status` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`)

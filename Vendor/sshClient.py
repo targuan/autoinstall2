@@ -54,7 +54,7 @@ def updateStatus(conn,cursor,status,id):
 
 def push(queue,equipement,args):
   if equipement['mac'] in args.leases.get_current():
-    logger.debug("Pushing back %s"%equipement['hostname'])
+    logger.debug("Pushing back %s"%equipement['name'])
     queue.put(equipement)
 
 def testEquipement(queue,args):
@@ -64,75 +64,77 @@ def testEquipement(queue,args):
     try:
       equipement = queue.get(True,1)
       conn=ClientIOSXE(equipement['ip'],args.sw_user,args.sw_pass)
-      logger.debug('%s Running'%equipement['hostname'])
+      logger.debug('%s Running'%equipement['name'])
       if not conn.ping():
-        logger.debug('%s Ping KO'%equipement['hostname'])
+        logger.debug('%s Ping KO'%equipement['name'])
         push(queue,equipement,args)
         updateStatus(myconn,mycursor,0,equipement['id'])
         continue
       
-      logger.debug('%s Ping OK'%equipement['hostname'])
+      logger.debug('%s Ping OK'%equipement['name'])
       updateStatus(myconn,mycursor,1,equipement['id'])
       
       try:
         conn.connect()
       except:
-        logger.debug('%s Connection KO'%equipement['hostname'])
+        logger.debug('%s Connection KO'%equipement['name'])
         push(queue,equipement,args)
         continue
       
-      logger.info("%s Connection OK"%equipement['hostname'])
+      logger.info("%s Connection OK"%equipement['name'])
       updateStatus(myconn,mycursor,2,equipement['id'])
       
       if not conn.checkVersion(args.version):
-        logger.info("%s version KO"%equipement['hostname'])
+        logger.info("%s version KO"%equipement['name'])
         
         if not conn.fileExists(args.binary):
-          logger.info("%s Binary file not found"%equipement['hostname'])
+          logger.info("%s Binary file not found"%equipement['name'])
           updateStatus(myconn,mycursor,2,equipement['id'])
           if not conn.download('ftp://%s/%s'%(args.ftp_server,args.binary)):
-            logger.debug('%s Binary download failed'%equipement['hostname'])
+            logger.debug('%s Binary download failed'%equipement['name'])
             push(queue,equipement,args)
             conn.disconnect()
             continue
           else:
-            logger.debug('%s Binary download OK'%equipement['hostname'])
+            logger.debug('%s Binary download OK'%equipement['name'])
         
-        logger.info("%s Binary found"%equipement['hostname'])
+        logger.info("%s Binary found"%equipement['name'])
         updateStatus(myconn,mycursor,4,equipement['id'])
         if not conn.md5sum(args.binary,args.binary_md5):
-          logger.info("%s Bad md5 for binary"%equipement['hostname'])
+          logger.info("%s Bad md5 for binary"%equipement['name'])
           push(queue,equipement,args)
           conn.disconnect()
           continue
         else:
-          logger.info("%s md5 OK"%equipement['hostname'])
+          logger.info("%s md5 OK"%equipement['name'])
           updateStatus(myconn,mycursor,6,equipement['id'])
           conn.upgrade(args.binary)
       else:
-        logger.info("%s version OK"%equipement['hostname'])
+        logger.info("%s version OK"%equipement['name'])
         updateStatus(myconn,mycursor,3,equipement['id'])
         m=re.search('^slave(\d+)',equipement['template'])
         if m:
           id=m.group(1)
           conn.provision(id)
-          logger.info("%s provision OK"%equipement['hostname'])
+          logger.info("%s provision OK"%equipement['name'])
           updateStatus(myconn,mycursor,9,equipement['id'])
           conn.disconnect()
         else:
           conn.provision(1)
-          if not conn.copyConfig(equipement['hostname'],args.tftp_server):
-            logger.info("%s copy KO"%equipement['hostname'])
+          if not conn.copyConfig(equipement['name'],args.tftp_server):
+            logger.info("%s copy KO"%equipement['name'])
             updateStatus(myconn,mycursor,8,equipement['id'])
             push(queue,equipement,args)
             conn.disconnect()
           else:
-            logger.info("%s copy OK"%equipement['hostname'])
+            logger.info("%s copy OK"%equipement['name'])
             updateStatus(myconn,mycursor,9,equipement['id'])
             conn.disconnect()
             continue
     except Queue.Empty:
       continue
+    except Exception as e:
+      print e
     queue.task_done()
   myconn.close()
 
@@ -140,10 +142,10 @@ def testEquipement(queue,args):
 def loadList():
   myconn = mysql.connector.connect(host=args.db_host,user=args.db_user,password=args.db_pass,database=args.db_user)
   mycursor = myconn.cursor()
-  mycursor.execute("select id, hostname, mac,template from equipements where status != 9")
+  mycursor.execute("select id, name, mac,template from equipements where status != 9")
   equipements=[]
   for eqptValues in mycursor.fetchall():
-    equipement = {"id":eqptValues[0], "hostname":eqptValues[1], "mac":eqptValues[2],"template":eqptValues[3]}
+    equipement = {"id":eqptValues[0], "name":eqptValues[1], "mac":eqptValues[2],"template":eqptValues[3]}
     equipements.append(equipement)
   myconn.disconnect()
   return equipements

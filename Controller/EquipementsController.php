@@ -130,7 +130,7 @@ class EquipementsController extends AppController {
                 }
                 $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
 
-                foreach (array('hostname', 'template', 'mac','ip') as $key) {
+                foreach (array('name', 'template', 'mac','ip') as $key) {
                     if (!isset($variables[$key]) or empty($variables[$key])) {
                         throw new InternalErrorException("$key not found at line $n");
                     }
@@ -210,11 +210,11 @@ class EquipementsController extends AppController {
         $this->response->type('text/plain');
     }
 
-   public function getByHostname($hostname) {
-        if(!$hostname) { 
+   public function getByName($name) {
+        if(!$name) { 
             throw new NotFoundException(__('Invalid switch'));
         }
-        $equipement = $this->Equipement->findByHostname($hostname);
+        $equipement = $this->Equipement->findByName($name);
         if (!$equipement) {
             throw new NotFoundException(__('Invalid equipement'));
         }
@@ -319,8 +319,8 @@ class EquipementsController extends AppController {
             ));
             $networkconfg = "";
             foreach ($equipements as $equipement) {
-                $zip->addFromString("{$equipement['Equipement']['hostname']}-confg", self::getConfigurationFromTemplate($equipement));
-                $networkconfg .= "ip host {$equipement['Equipement']['hostname']} {$equipement['Equipement']['ip']}\n";
+                $zip->addFromString("{$equipement['Equipement']['name']}-confg", self::getConfigurationFromTemplate($equipement));
+                $networkconfg .= "ip host {$equipement['Equipement']['name']} {$equipement['Equipement']['ip']}\n";
             }
             
             $zip->addFromString("network-confg", "$networkconfg");

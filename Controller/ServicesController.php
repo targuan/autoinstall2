@@ -74,7 +74,7 @@ class ServicesController extends AppController {
         $content = "";
         foreach($equipements as $equipement) {
             $ip = $equipement['Equipement']['ip'];
-            $hostname = $equipement['Equipement']['hostname'];
+            $name = $equipement['Equipement']['name'];
             $mac = $equipement['Equipement']['mac'];
             $content .= "subclass \"switchs\" 1:$mac;\n";
         }
@@ -112,8 +112,8 @@ class ServicesController extends AppController {
         
         foreach($equipements as $equipement) {
             $ip = $equipement['Equipement']['ip'];
-            $network .= "ip host {$equipement['Equipement']['hostname']} {$ip}\n";
-            file_put_contents("$tftpdroot/{$equipement['Equipement']['hostname']}-confg",$boottemplate);
+            $network .= "ip host {$equipement['Equipement']['name']} {$ip}\n";
+            file_put_contents("$tftpdroot/{$equipement['Equipement']['name']}-confg",$boottemplate);
             
             $template_name = $equipement['Equipement']['template'];
             if(strpos($template_name,"slave")===0) {
@@ -127,7 +127,7 @@ class ServicesController extends AppController {
             foreach($equipement['Variable'] as $variable) {
                 $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
             }
-            file_put_contents("$tftpdroot/fullconfig/{$equipement['Equipement']['hostname']}-confg",$template);
+            file_put_contents("$tftpdroot/fullconfig/{$equipement['Equipement']['name']}-confg",$template);
             
         }
         

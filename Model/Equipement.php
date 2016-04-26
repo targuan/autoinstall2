@@ -14,7 +14,7 @@ App::uses('AppModel', 'Model');
  */
 class Equipement extends AppModel {
     public $validate = array(
-        'hostname' => array(
+        'name' => array(
             'rule' => 'notBlank'
         ),
         'mac' => array(

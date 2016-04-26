@@ -48,8 +48,8 @@ class TFTPServer:
       name = filename[:-6]
       logger.info("Getting %s from the webserver"%(name))
       try:
-        logger.debug('%s/equipements/getByHostname/%s'%(self.httproot,name))
-        fp = urllib2.urlopen('%s/equipements/getByHostname/%s'%(self.httproot,name))
+        logger.debug('%s/equipements/getByName/%s'%(self.httproot,name))
+        fp = urllib2.urlopen('%s/equipements/getByName/%s'%(self.httproot,name))
         file = fp.read()
         fp.close()
       except:

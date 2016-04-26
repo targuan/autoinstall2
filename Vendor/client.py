@@ -117,9 +117,18 @@ class Client:
         fbuf += buf
     time.sleep(10)
   
-  def copyConfig(self,hostname,tftp_server):
-    buf = self.send_command('copy tftp://%s/%s-confg startup-config'%(tftp_server,hostname),strip_command=False,strip_prompt=False,delay_factor=5)
-    if 'OK' in buf:
+  def copyConfig(self,name,tftp_server):
+    fbuf = ''
+    buf = self.send_command('copy tftp://%s/%s-confg startup-config'%(tftp_server,name),strip_command=False,strip_prompt=False,delay_factor=5)
+    fbuf = buf if buf != None else ''
+    if 'Destination filename' in buf:
+      buf = self.send_command('')
+      fbuf += buf if buf != None else ''
+    while 'Error' not in fbuf and 'OK' not in fbuf:
+      time.sleep(1)
+      buf = self.clear_buffer()
+      fbuf += buf if buf != None else ''
+    if 'OK' in fbuf:
       return True
     return False
   
@@ -141,6 +150,9 @@ class Client:
   
   def disconnect(self):
     self.net_connect.disconnect()
+  
+  def shut(self):
+    self.net_connect.send_config_set(["interface range g1/0/1-24","shut"])
 
 class ClientIOSXE(Client):
   def upgrade(self,filename):

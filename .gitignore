@@ -1,2 +1,3 @@
 webroot/documents/
 tmp/
+Vendor/*.pyc
