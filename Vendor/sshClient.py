@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import mysql.connector
 import Queue
 from threading import Thread
