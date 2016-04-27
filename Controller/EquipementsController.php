@@ -55,6 +55,7 @@ class EquipementsController extends AppController {
     public function add() {
         if ($this->request->is('post')) {
             $this->Equipement->create();
+            $this->request->data['Equipement']['mac'] = strtolower($this->request->data['Equipement']['mac']);
             if ($this->Equipement->save($this->request->data)) {
                 $this->Flash->success(__('Your equipement has been saved.'));
                 return $this->redirect(array('action' => 'index'));
@@ -120,7 +121,7 @@ class EquipementsController extends AppController {
                 $variables = array();
                 $values = explode($separator, trim($line));
                 $variables = array_combine($keys, $values);
-                $mac = preg_replace('`[^a-f0-9]`i', '', $variables['mac']);
+                $mac = strtolower(preg_replace('`[^a-f0-9]`i', '', $variables['mac']));
                 if ($this->request->data['Equipement']['basemac']) {
                     $delta = $this->request->data['Equipement']['delta'];
 
