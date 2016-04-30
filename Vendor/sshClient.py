@@ -31,9 +31,6 @@ def parse_args():
     parser.add_argument('--sw-pass', required=True, help="Equipements pass")
     parser.add_argument('--workers', default=5,
                         help="Number of worker to use to connect to the equipements", type=int)
-    parser.add_argument('--binary', required=True, help="Binary file name")
-    parser.add_argument('--binary-md5', required=True, help="Binary md5sum")
-    parser.add_argument('--version', required=True, help="Binary finger print")
     parser.add_argument('--ftp-server', required=True, help="FTP server to download the binary")
     parser.add_argument('--tftp-server', required=True,
                         help="TFTP server to download the configuration")
@@ -91,14 +88,14 @@ def test_equipement(queue, args):
             logger.info("%s Connection OK" % equipement['name'])
             update_status(args, 2, equipement['id'])
 
-            if not conn.check_version(args.version):
+            if not conn.check_version(equipement['version']):
                 logger.info("%s version KO" % equipement['name'])
 
-                if not conn.file_exists(args.binary):
+                if not conn.file_exists(equipement['binary']):
                     logger.info("%s Binary file not found" %
                                 equipement['name'])
                     update_status(args, 2, equipement['id'])
-                    path = 'ftp://%s/%s' % (args.ftp_server, args.binary)
+                    path = 'ftp://%s/%s' % (args.ftp_server, equipement['binary'])
                     if not conn.download(path):
                         logger.debug('%s Binary download failed' %
                                      equipement['name'])
@@ -111,7 +108,7 @@ def test_equipement(queue, args):
 
                 logger.info("%s Binary found" % equipement['name'])
                 update_status(args, 4, equipement['id'])
-                conn.upgrade(args.binary)
+                conn.upgrade(equipement['binary'])
             else:
                 logger.info("%s version OK" % equipement['name'])
                 update_status(args, 3, equipement['id'])
