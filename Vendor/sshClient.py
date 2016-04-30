@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import mysql.connector
 import Queue
 from threading import Thread
 import signal
@@ -10,6 +9,8 @@ import sys
 import argparse
 import netmiko
 import re
+import urllib2
+import json
 from tftp import *
 import logging
 from isc_dhcp_leases.iscdhcpleases import Lease, IscDhcpLeases
@@ -26,11 +27,6 @@ def stop_handler(signum, frame):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="", fromfile_prefix_chars='@')
-    parser.add_argument('--db-user', '-u',
-                        help="Database username", required=True)
-    parser.add_argument('--db-pass', '-p', help="Database password")
-    parser.add_argument('--db-host', required=True, help="Database host")
-    parser.add_argument('--db-database', required=True, help="Database host")
     parser.add_argument('--sw-user', required=True, help="Equipements user")
     parser.add_argument('--sw-pass', required=True, help="Equipements pass")
     parser.add_argument('--workers', default=5,
@@ -58,10 +54,10 @@ def parse_args():
     return args
 
 
-def update_status(conn, cursor, status, id):
-    cursor.execute(
-        "update equipements set status=%s where id=%s", (status, id))
-    conn.commit()
+def update_status(args, status, id):
+    url = '%s/equipements/updateStatus/%s/%s.json'%(args.http_root,id,status)
+    fp = urllib2.urlopen(url)
+    result = fp.read()
 
 
 def push(queue, equipement, args):
@@ -71,10 +67,6 @@ def push(queue, equipement, args):
 
 
 def test_equipement(queue, args):
-    myconn = mysql.connector.connect(
-        host=args.db_host, user=args.db_user, password=args.db_pass,
-        database=args.db_user)
-    mycursor = myconn.cursor()
     while run:
         try:
             equipement = queue.get(True, 1)
@@ -83,11 +75,11 @@ def test_equipement(queue, args):
             if not conn.ping():
                 logger.debug('%s Ping KO' % equipement['name'])
                 push(queue, equipement, args)
-                update_status(myconn, mycursor, 0, equipement['id'])
+                update_status(args, 0, equipement['id'])
                 continue
 
             logger.debug('%s Ping OK' % equipement['name'])
-            update_status(myconn, mycursor, 1, equipement['id'])
+            update_status(args, 1, equipement['id'])
 
             try:
                 conn.connect()
@@ -97,7 +89,7 @@ def test_equipement(queue, args):
                 continue
 
             logger.info("%s Connection OK" % equipement['name'])
-            update_status(myconn, mycursor, 2, equipement['id'])
+            update_status(args, 2, equipement['id'])
 
             if not conn.check_version(args.version):
                 logger.info("%s version KO" % equipement['name'])
@@ -105,7 +97,7 @@ def test_equipement(queue, args):
                 if not conn.file_exists(args.binary):
                     logger.info("%s Binary file not found" %
                                 equipement['name'])
-                    update_status(myconn, mycursor, 2, equipement['id'])
+                    update_status(args, 2, equipement['id'])
                     path = 'ftp://%s/%s' % (args.ftp_server, args.binary)
                     if not conn.download(path):
                         logger.debug('%s Binary download failed' %
@@ -118,39 +110,29 @@ def test_equipement(queue, args):
                                      equipement['name'])
 
                 logger.info("%s Binary found" % equipement['name'])
-                update_status(myconn, mycursor, 4, equipement['id'])
+                update_status(args, 4, equipement['id'])
                 conn.upgrade(args.binary)
-                continue
-                # if not conn.md5sum(args.binary,args.binary_md5):
-                #  logger.info("%s Bad md5 for binary"%equipement['name'])
-                #  push(queue,equipement,args)
-                #  conn.disconnect()
-                #  continue
-                # else:
-                #  logger.info("%s md5 OK"%equipement['name'])
-                #  update_status(myconn,mycursor,6,equipement['id'])
-                #  conn.upgrade(args.binary)
             else:
                 logger.info("%s version OK" % equipement['name'])
-                update_status(myconn, mycursor, 3, equipement['id'])
+                update_status(args, 3, equipement['id'])
                 m = re.search('^slave(\d+)', equipement['template'])
                 if m:
                     id = m.group(1)
                     conn.provision(id)
                     logger.info("%s provision OK" % equipement['name'])
-                    update_status(myconn, mycursor, 9, equipement['id'])
+                    update_status(args, 9, equipement['id'])
                     conn.disconnect()
                 else:
                     conn.provision(1)
                     if not conn.copy_config(equipement['name'],
                                             args.tftp_server):
                         logger.info("%s copy KO" % equipement['name'])
-                        update_status(myconn, mycursor, 8, equipement['id'])
+                        update_status(args, 8, equipement['id'])
                         push(queue, equipement, args)
                         conn.disconnect()
                     else:
                         logger.info("%s copy OK" % equipement['name'])
-                        update_status(myconn, mycursor, 9, equipement['id'])
+                        update_status(args, 9, equipement['id'])
                         conn.disconnect()
                         continue
         except Queue.Empty:
@@ -158,23 +140,14 @@ def test_equipement(queue, args):
         except Exception as e:
             print e
         queue.task_done()
-    myconn.close()
 
 
-def load_list():
-    myconn = mysql.connector.connect(host=args.db_host, user=args.db_user,
-                                     password=args.db_pass,
-                                     database=args.db_user)
-    mycursor = myconn.cursor()
-    mycursor.execute(
-        "select id, name, mac,template from equipements where status != 9")
-    equipements = []
-    for eqptValues in mycursor.fetchall():
-        equipement = {"id": eqptValues[0], "name": eqptValues[
-            1], "mac": eqptValues[2], "template": eqptValues[3]}
-        equipements.append(equipement)
-    myconn.disconnect()
-    return equipements
+def load_list(args):
+    url = '%s/equipements/index.json'%args.http_root
+    fp = urllib2.urlopen(url)
+    full_inventory = json.loads(fp.read())
+    filtered = [e for e in full_inventory if e['status'] != '9']
+    return filtered
 
 
 if __name__ == '__main__':
@@ -197,16 +170,6 @@ if __name__ == '__main__':
     logger.debug('Installing SIGINT handler')
     signal.signal(signal.SIGINT, stop_handler)
 
-    logger.debug('Testing database connection')
-    try:
-        myconn = mysql.connector.connect(
-            host=args.db_host, user=args.db_user, password=args.db_pass,
-            database=args.db_user)
-        mycursor = myconn.cursor()
-    except Exception as e:
-        logger.error("Failed to connect to database: %s" % str(e))
-        sys.exit(1)
-
     logger.debug('Starting %d workers' % args.workers)
     for i in xrange(args.workers):
         t = Thread(target=test_equipement, args=(equipementList, args,))
@@ -228,7 +191,7 @@ if __name__ == '__main__':
         logger.debug('%d New leases' % len(newLeases))
 
         if len(newLeases) > 0:
-            equipements = load_list()
+            equipements = load_list(args)
             for lease in newLeases:
                 eq = [e for e in equipements if e['mac'] == lease[0]]
                 if len(eq) > 0:
