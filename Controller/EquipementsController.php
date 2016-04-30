@@ -15,7 +15,7 @@ App::uses('AppController', 'Controller');
 class EquipementsController extends AppController {
 
     public $helpers = array('Html', 'Form', 'Flash');
-    public $components = array('Flash');
+    public $components = array('Flash','RequestHandler');
 
     private static function getConfigurationFromTemplate($equipement) {
         $template = "";
@@ -39,6 +39,7 @@ class EquipementsController extends AppController {
     public function index() {
         $equipements = $this->Equipement->find('all');
         $this->set('equipements', $equipements);
+        #$this->set('_serialize', array('equipements'));
     }
 
     public function view($id) {
@@ -50,6 +51,7 @@ class EquipementsController extends AppController {
             throw new NotFoundException(__('Invalid equipement'));
         }
         $this->set('equipement', $equipement);
+        $this->set('_serialize', array('equipement'));
     }
 
     public function add() {
@@ -336,6 +338,12 @@ class EquipementsController extends AppController {
             $this->Flash->error(__('Select the equipements to export.'));
             return $this->redirect(array('action' => 'index'));
         }
+    }
+    
+    public function updateStatus($id,$status) {
+        $this->Equipement->id = (int)$id;
+        $this->Equipement->saveField('status',(int)$status);
+        return $this->redirect(array('action' => 'view',$id));
     }
 
 }
