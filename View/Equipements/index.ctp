@@ -32,7 +32,7 @@
                     </td>
                     <td><?php echo $equipement['Equipement']['mac'] ?></td>
                     <td><?php echo $equipement['Equipement']['template'] ?></td>
-                    <td><?php echo $equipement['Equipement']['statusValue'] ?></td>
+                    <td><?php echo $equipement['Equipement']['status'] ?></td>
                 </tr>
             <?php endforeach; ?>
             <?php echo $this->Form->end(); ?>

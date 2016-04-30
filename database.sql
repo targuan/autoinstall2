@@ -18,7 +18,7 @@ CREATE TABLE `equipements` (
   `template` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `ip` varchar(255) DEFAULT NULL,
-  `status` tinyint(4) DEFAULT '0',
+  `status` varchar(255) DEFAULT 'init',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1232 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;

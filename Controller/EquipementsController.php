@@ -133,8 +133,9 @@ class EquipementsController extends AppController {
                 }
                 $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
 
-                foreach (array('name', 'template', 'mac','ip') as $key) {
+                foreach (array('name', 'template', 'mac','ip','status') as $key) {
                     if (!isset($variables[$key]) or empty($variables[$key])) {
+                        if($key == 'status') continue;
                         throw new InternalErrorException("$key not found at line $n");
                     }
                     $equipement['Equipement'][$key] = $variables[$key];
@@ -171,7 +172,7 @@ class EquipementsController extends AppController {
     public function resetStatus() {
         if ($this->request->is('post')) {
             $this->Equipement->updateAll(
-		array('Equipement.status'=>0),
+		array('Equipement.status'=>"'init'"),
 		array('Equipement.id'=>$this->request->data['ids'])
             );
         }
@@ -342,7 +343,7 @@ class EquipementsController extends AppController {
     
     public function updateStatus($id,$status) {
         $this->Equipement->id = (int)$id;
-        $this->Equipement->saveField('status',(int)$status);
+        $this->Equipement->saveField('status',$status);
         return $this->redirect(array('action' => 'view',$id));
     }
 
