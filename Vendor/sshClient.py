@@ -30,18 +30,18 @@ def parse_args():
     parser.add_argument('--sw-user', required=True, help="Equipements user")
     parser.add_argument('--sw-pass', required=True, help="Equipements pass")
     parser.add_argument('--workers', default=5,
-                        help="Equipements pass", type=int)
-    parser.add_argument('--binary', required=True, help="Equipements pass")
-    parser.add_argument('--binary-md5', required=True, help="Equipements pass")
-    parser.add_argument('--version', required=True, help="Equipements pass")
-    parser.add_argument('--ftp-server', required=True, help="Equipements pass")
+                        help="Number of worker to use to connect to the equipements", type=int)
+    parser.add_argument('--binary', required=True, help="Binary file name")
+    parser.add_argument('--binary-md5', required=True, help="Binary md5sum")
+    parser.add_argument('--version', required=True, help="Binary finger print")
+    parser.add_argument('--ftp-server', required=True, help="FTP server to download the binary")
     parser.add_argument('--tftp-server', required=True,
-                        help="Equipements pass")
+                        help="TFTP server to download the configuration")
     parser.add_argument('--leases-file', required=True,
-                        help="Equipements pass")
+                        help="ISC DHCPD lease file location")
     parser.add_argument('--debug', help="Debug level",
                         type=int, choices=[0, 1, 2], default=0)
-    parser.add_argument('--http-root', required=True)
+    parser.add_argument('--http-root', required=True,help='Web server address')
     args = parser.parse_args()
 
     if not os.path.isfile(args.leases_file):
