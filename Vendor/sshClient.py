@@ -30,15 +30,17 @@ def parse_args():
     parser.add_argument('--sw-user', required=True, help="Equipements user")
     parser.add_argument('--sw-pass', required=True, help="Equipements pass")
     parser.add_argument('--workers', default=5,
-                        help="Number of worker to use to connect to the equipements", type=int)
-    parser.add_argument('--ftp-server', required=True, help="FTP server to download the binary")
+                        help="Size of ssh client pool", type=int)
+    parser.add_argument('--ftp-server', required=True,
+                        help="FTP server to download the binary")
     parser.add_argument('--tftp-server', required=True,
                         help="TFTP server to download the configuration")
     parser.add_argument('--leases-file', required=True,
                         help="ISC DHCPD lease file location")
     parser.add_argument('--debug', help="Debug level",
                         type=int, choices=[0, 1, 2], default=0)
-    parser.add_argument('--http-root', required=True,help='Web server address')
+    parser.add_argument('--http-root', required=True,
+                        help='Web server address')
     args = parser.parse_args()
 
     if not os.path.isfile(args.leases_file):
@@ -52,7 +54,8 @@ def parse_args():
 
 
 def update_status(args, status, id):
-    url = '%s/equipements/updateStatus/%s/%s.json'%(args.http_root,id,status)
+    url = '%s/equipements/updateStatus/%s/%s.json' % (args.http_root, id,
+                                                      status)
     fp = urllib2.urlopen(url)
     result = fp.read()
 
@@ -95,7 +98,8 @@ def test_equipement(queue, args):
                     logger.info("%s Binary file not found" %
                                 equipement['name'])
                     update_status(args, 2, equipement['id'])
-                    path = 'ftp://%s/%s' % (args.ftp_server, equipement['binary'])
+                    path = 'ftp://%s/%s' % (args.ftp_server,
+                                            equipement['binary'])
                     if not conn.download(path):
                         logger.debug('%s Binary download failed' %
                                      equipement['name'])
@@ -140,7 +144,7 @@ def test_equipement(queue, args):
 
 
 def load_list(args):
-    url = '%s/equipements/index.json'%args.http_root
+    url = '%s/equipements/index.json' % args.http_root
     fp = urllib2.urlopen(url)
     full_inventory = json.loads(fp.read())
     filtered = [e for e in full_inventory if e['status'] != '9']
@@ -169,7 +173,7 @@ if __name__ == '__main__':
 
     logger.debug('Starting %d workers' % args.workers)
     for i in xrange(args.workers):
-        t = Thread(target=test_equipement, args=(equipementList, args,))
+        t = Thread(target=test_equipement, args=(equipementList, args, ))
         t.start()
 
     logger.debug('Starting tftp server')
