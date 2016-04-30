@@ -61,7 +61,7 @@ class Client:
         self.net_connect = netmiko.ConnectHandler(**device)
 
     def check_version(self, fingerprint):
-        buf = self.send_command('show ver')
+        buf = self.send_command('show version')
         if fingerprint in buf:
             return True
         return False
@@ -110,7 +110,7 @@ class Client:
 
     def upgrade(self, filename):
         fbuf = u''
-        buf = self.send_command('soft install file flash:%s' % filename)
+        buf = self.send_command('software install file flash:%s' % filename)
         fbuf += buf
         while 'reload' not in fbuf:
             time.sleep(1)
@@ -154,12 +154,12 @@ class Client:
         else:
             self.send_command('switch %s priority 1' % number)
         self.send_command('y')
-        buf = self.send_command('show sw')
+        buf = self.send_command('show switch')
         m = re.search('\*(\d+)', buf)
         if m:
             id = m.group(1)
             if id != number:
-                buf = self.send_command("sw %s ren %s" % (id, number))
+                buf = self.send_command("switch %s renumber %s" % (id, number))
                 buf = self.send_command("y")
 
     def disconnect(self):
@@ -173,7 +173,7 @@ class ClientIOSXE(Client):
 
     def upgrade(self, filename):
         fbuf = u''
-        buf = self.send_command('soft install file flash:%s' % filename)
+        buf = self.send_command('software install file flash:%s' % filename)
         fbuf += buf
         while 'reload' not in fbuf:
             time.sleep(1)
