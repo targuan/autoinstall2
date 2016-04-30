@@ -97,13 +97,17 @@ class Client:
 
     def download(self, filename):
         buf = self.send_command('copy %s flash:' % (filename))
-        while buf is None:
+        if buf is None:
+            fbuf = ''
+        else:
+            fbuf = buf
+        while 'Error' not in fbuf and 'OK' not in fbuf:
+            time.sleep(0.1)
             buf = self.clear_buffer()
-        if 'Error' in buf:
+            if buf is not None:
+                fbuf += buf
+        if 'Error' in fbuf:
             return False
-        while buf is None or '!' in buf:
-            time.sleep(1)
-            buf = self.clear_buffer()
         if 'OK' in buf:
             return True
         return False
