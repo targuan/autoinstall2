@@ -12,6 +12,7 @@ import re
 import urllib2
 import urllib
 import json
+import random
 from tftp import *
 import logging
 from isc_dhcp_leases.iscdhcpleases import Lease, IscDhcpLeases
@@ -33,7 +34,8 @@ def parse_args():
     parser.add_argument('--workers', default=5,
                         help="Size of ssh client pool", type=int)
     parser.add_argument('--ftp-server', required=True,
-                        help="FTP server to download the binary")
+                        help="FTP server to download the binary",
+                        action="append")
     parser.add_argument('--tftp-server', required=True,
                         help="TFTP server to download the configuration")
     parser.add_argument('--leases-file', required=True,
@@ -101,16 +103,17 @@ def test_equipement(queue, args):
                 logger.info("%s version KO %s" % (equipement['name'],
                                                   equipement['version']))
 
-                
-                update_status(args, 'checking for binary file', equipement['id'])
+                update_status(args, 'checking for binary file',
+                              equipement['id'])
                 if not conn.file_exists(equipement['binary']):
                     logger.info("%s Binary file not found" %
                                 equipement['name'])
-                    path = 'ftp://%s/%s' % (args.ftp_server,
+                    path = 'ftp://%s/%s' % (random.choice(args.ftp_server),
                                             equipement['binary'])
                     update_status(args, 'downloading binary', equipement['id'])
                     if not conn.download(path):
-                        update_status(args, 'download failed', equipement['id'])
+                        update_status(args, 'download failed',
+                                      equipement['id'])
                         logger.debug('%s Binary download failed' %
                                      equipement['name'])
                         push(queue, equipement, args)
@@ -130,7 +133,8 @@ def test_equipement(queue, args):
                 m = re.search('^slave(\d+)', equipement['template'])
                 if m:
                     id = m.group(1)
-                    update_status(args, 'provisionning slave', equipement['id'])
+                    update_status(args, 'provisionning slave',
+                                  equipement['id'])
                     conn.provision(id)
                     logger.info("%s provision OK" % equipement['name'])
                     update_status(args, 'completed', equipement['id'])
@@ -141,7 +145,8 @@ def test_equipement(queue, args):
                     update_status(args, 'copying conf', equipement['id'])
                     if not conn.copy_config(equipement['name'],
                                             args.tftp_server):
-                        update_status(args, 'copy conf error', equipement['id'])
+                        update_status(args, 'copy conf error',
+                                      equipement['id'])
                         logger.info("%s copy KO" % equipement['name'])
                         push(queue, equipement, args)
                         conn.disconnect()
