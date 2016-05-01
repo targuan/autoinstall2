@@ -90,3 +90,14 @@ td input {
 textarea {
     
 }
+
+.omnisearch_container {
+    padding-left: 5%;
+    padding-right: 5%;
+    text-align: right;
+}
+
+.omnisearch_container input[type="text"] {
+    width: 100%;
+    margin-bottom: 10px;
+}

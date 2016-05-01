@@ -342,6 +342,13 @@ class EquipementsController extends AppController {
     }
     
     public function updateStatus($id,$status) {
+        $equipement = $this->Equipement->findById($id);
+        $this->loadModel('Event');
+        $event = array('source' => 'API',
+                       'severity' => 20,
+                       'date' => $this->Event->getDataSource()->expression('NOW()'),
+                       'event' => $equipement['Equipement']['name'] . ': status changed to ' .$status); 
+        $this->Event->save($event);
         $this->Equipement->id = (int)$id;
         $this->Equipement->saveField('status',$status);
         return $this->redirect(array('action' => 'view',$id));

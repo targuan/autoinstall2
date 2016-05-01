@@ -53,6 +53,18 @@ CREATE TABLE `variables` (
 ) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+DROP TABLE IF EXISTS `events`;
+
+
+CREATE TABLE `events` ( 
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `severity` int(10) unsigned NOT NULL default 0,
+  `source` varchar(255),
+  `date` datetime,
+  `event` varchar(255),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=latin1;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

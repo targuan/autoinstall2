@@ -13,5 +13,8 @@
         <li> <?php echo $this->Html->link("Parameters",
                                         array('controller' => 'parameters', 
                                               'action' => 'index')); ?></li>
+        <li> <?php echo $this->Html->link("Events",
+                                        array('controller' => 'events', 
+                                              'action' => 'index')); ?></li>
     </ul>
 </div>
