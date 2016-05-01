@@ -10,6 +10,7 @@ import argparse
 import netmiko
 import re
 import urllib2
+import urllib
 import json
 from tftp import *
 import logging
@@ -55,7 +56,7 @@ def parse_args():
 
 def update_status(args, status, id):
     url = '%s/equipements/updateStatus/%s/%s.json' % (args.http_root, id,
-                                                      status)
+                                                      urllib.quote(status))
     fp = urllib2.urlopen(url)
     result = fp.read()
 
