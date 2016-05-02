@@ -4,6 +4,7 @@ import threading
 import isc_dhcp_leases.iscdhcpleases
 import cStringIO
 import urllib2
+import re
 
 logger = logging.getLogger('autoinstall.tftp')
 logger.setLevel(logging.DEBUG)
@@ -37,9 +38,11 @@ class TFTPServer:
         logger.info('Serving %s' % filename)
         if filename == 'network-confg':
             leases = self.leases.get_current()
+            i = 0
             for mac in leases:
-                file += "ip host boot %s\n" % (leases[mac].ip)
-        elif filename == 'boot-confg' or filename == 'router-confg':
+                file += "ip host boot%i %s\n" % (i, leases[mac].ip)
+                i += 1
+        elif re.match('(router|boot\d*)-confg',filename):
             try:
                 fp = urllib2.urlopen(
                     '%s/parameters/get/boottemplate' % self.httproot)
