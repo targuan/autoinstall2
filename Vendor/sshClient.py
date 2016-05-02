@@ -127,6 +127,7 @@ def test_equipement(queue, args):
                 logger.info("%s Binary found" % equipement['name'])
                 update_status(args, 'installing', equipement['id'])
                 conn.upgrade(equipement['binary'])
+                update_status(args, 'reloading', equipement['id'])
             else:
                 logger.info("%s version OK" % equipement['name'])
                 update_status(args, 'version ok', equipement['id'])
@@ -207,7 +208,6 @@ if __name__ == '__main__':
         logger.debug('Found %d active leases' % len(leases))
         currentLeasesList = set([(mac, leases[mac].ip) for mac in leases])
         newLeases = currentLeasesList - leasesList
-        leasesList = currentLeasesList
         logger.debug('%d New leases' % len(newLeases))
 
         if len(newLeases) > 0:
@@ -218,9 +218,11 @@ if __name__ == '__main__':
                     eq[0]['ip'] = lease[1]
                     logger.debug('Add %s to process list' % str(eq[0]))
                     equipementList.put(eq[0])
+                    leasesList.add(lease)
                 else:
                     logger.debug(
                         'Lease for mac %s is not in the database or '
                         'in finished state' % lease[0])
+        leasesList = currentLeasesList & leasesList
 
         time.sleep(1)
