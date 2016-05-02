@@ -14,9 +14,9 @@ App::uses('AppController', 'Controller');
  */
 class EventsController extends AppController {
     public $helpers = array('Html', 'Form', 'Flash');
-    public $components = array('Flash','RequestHandler');
+    public $components = array('Flash','RequestHandler','Paginator');
 
-    public function index() {
+    public function index($live = '') {
         $conditions = array();
         if(isset($this->request->query['search'])) {
                 $this->request->data['Filter']['search'] = $this->request->query['search'];
@@ -26,7 +26,11 @@ class EventsController extends AppController {
                 	$conditions['OR'][] = array('event like'=> $search);
                 }
         }
-        $events = $this->Event->find('all',array('conditions' => $conditions,"order"=>"date desc"));
+        $this->Paginator->settings = array('order' => 'date desc');
+        $events = $this->Paginator->paginate('Event',$conditions);
+        //$events = $this->Event->find('all',array('conditions' => $conditions,"order"=>"date desc"));
         $this->set('events', $events);
+        
+        $this->set('live', $live == 'live');
     }
 }

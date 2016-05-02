@@ -24,6 +24,11 @@
             <?php endforeach; ?>
         </tbody>
 </div>
+<?php if($live) : ?>
 <script>
     setTimeout(function(){location.reload()}, 3000);
 </script>
+<?php endif; ?>
+<div>
+<?php echo $this->Paginator->numbers(); ?>
+</div>
