@@ -9,6 +9,7 @@
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"export")) ?>">Export</button>
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"getConfigurations")) ?>">Download</button>
     <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"resetStatus")) ?>">Reset status</button>
+    <button form="EquipementPurgeForm" type="submit" formaction="<?php echo Router::url(array("action"=>"check")) ?>">Check</button>
     <table class="editable">
         <thead>
             <tr>

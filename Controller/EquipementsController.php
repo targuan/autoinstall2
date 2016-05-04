@@ -354,4 +354,42 @@ class EquipementsController extends AppController {
         return $this->redirect(array('action' => 'view',$id));
     }
 
+    public function check() {
+        if ($this->request->is('post') && isset($this->request->data['ids'])) {
+            $equipements = $this->Equipement->find('all', array(
+                "conditions" => array("Equipement.id" => $this->request->data['ids'])
+            ));
+            $result = array('OK'=>array(),'warning'=>array());
+            foreach ($equipements as $equipement) {
+                if(preg_match('`slave\d+`',$equipement['Equipement']['template'])) {
+                    $result['OK'][] = $equipement['Equipement']['name'];
+                    continue;
+                }
+                try {
+                    $empty = array();
+                    foreach($equipement['Variable'] as $variable) {
+                        if($variable['value'] == '') {
+                            $empty[] = $variable['name']; 
+                        }
+                    }
+                    if(!empty($empty)) {
+                        $result['warning'][] = array($equipement['Equipement']['name'],'Variable empty',$empty);
+                    }
+                    $configuration = self::getConfigurationFromTemplate($equipement);
+                    if(preg_match_all('`<([^>]+)>`',$configuration,$res)) {
+                        $result['warning'][] = array($equipement['Equipement']['name'],'Variable not found',array_unique($res[1]));
+                    } else {
+                        $result['OK'][] = $equipement['Equipement']['name'];
+                    }
+                } catch(Exception $e) {
+                    $result['warning'][] = array($equipement['Equipement']['name'],'template not found',array());
+                }
+
+            }
+            $this->set('result',$result);
+        } else {
+            return $this->redirect(array('action' => 'index'));
+        }
+    }
+
 }

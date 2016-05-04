@@ -101,3 +101,13 @@ textarea {
     width: 100%;
     margin-bottom: 10px;
 }
+
+.warning {
+    color: orange;
+}
+
+.ok {
+    color: green;
+}
+
+
