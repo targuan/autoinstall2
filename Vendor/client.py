@@ -113,23 +113,7 @@ class Client:
         return False
 
     def upgrade(self, filename):
-        fbuf = u''
-        buf = self.send_command('software install file flash:%s' % filename)
-        fbuf += buf
-        while 'reload' not in fbuf:
-            time.sleep(1)
-            buf = self.clear_buffer()
-            if buf is not None:
-                fbuf += buf
-        if "Do you want to proceed with reload" in fbuf:
-            buf = self.send_command('yes')
-            if buf is not None:
-                fbuf += buf
-        if 'System configuration has been modified' in buf:
-            buf = self.send_command('no')
-            if buf is not None:
-                fbuf += buf
-        time.sleep(10)
+        raise NotImplementedError
 
     def copy_config(self, name, tftp_server):
         fbuf = ''
@@ -178,6 +162,8 @@ class ClientIOSXE(Client):
     def upgrade(self, filename):
         fbuf = u''
         buf = self.send_command('software install file flash:%s' % filename)
+        if '%' in buf:
+            return False
         fbuf += buf
         while 'reload' not in fbuf:
             time.sleep(1)
@@ -185,11 +171,11 @@ class ClientIOSXE(Client):
             if buf is not None:
                 fbuf += buf
         if "Do you want to proceed with reload" in fbuf:
-            buf = self.send_command('yes')
+            buf = self.send_command('no')
             if buf is not None:
                 fbuf += buf
         if 'System configuration has been modified' in buf:
             buf = self.send_command('no')
             if buf is not None:
                 fbuf += buf
-        time.sleep(10)
+        return True

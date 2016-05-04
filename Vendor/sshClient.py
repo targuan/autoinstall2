@@ -68,100 +68,131 @@ def push(queue, equipement, args):
         logger.debug("Pushing back %s" % equipement['name'])
         queue.put(equipement)
 
+class InstallEquipement:
+    def __init__(self,equipement,args,queue):
+        self.equipement = equipement
+        self.args = args
+        self.conn = ClientIOSXE(equipement['ip'], args.sw_user, args.sw_pass)
+        self.queue = queue
+
+    def run(self):
+        update_status(args, 'leased', self.equipement['id'])
+        logger.debug("Running %s" % self.equipement['name'])
+        return self.ping
+
+    def ping(self):
+        update_status(args, 'pinging', self.equipement['id'])
+        logger.debug("Pinging %s" % self.equipement['name'])
+        if self.conn.ping():
+            update_status(args, 'ping ok', self.equipement['id'])
+            return self.connect
+        else:
+            update_status(args, 'ping ko', self.equipement['id'])
+            return self.push
+
+    def connect(self):
+        update_status(args, 'connecting', self.equipement['id'])
+        logger.debug("Connectinging %s" % self.equipement['name'])
+        try:
+            self.conn.connect()
+            update_status(args, 'Connection ok', self.equipement['id'])
+            return self.check_version
+        except:
+            update_status(args, 'Connection ko', self.equipement['id'])
+            return self.push
+
+    def push(self):
+        logger.debug("Queueing %s for retry" % self.equipement['name'])
+        push(self.queue, self.equipement, self.args)
+        return None
+
+    def check_version(self):
+        update_status(args, 'Checking version', self.equipement['id'])
+        logger.debug("Verifying version of %s" % self.equipement['name'])
+        if self.conn.check_version(self.equipement['version']):
+            update_status(args, 'version ok', self.equipement['id'])
+            return self.provision
+        else:
+            update_status(args, 'version ko', self.equipement['id'])
+            return self.file_exists
+
+    def file_exists(self):
+        update_status(args, 'verifying if binary exists', self.equipement['id'])
+        logger.debug("Verifying if binary is on %s" % self.equipement['name'])
+        if self.conn.file_exists(self.equipement['binary']):
+            update_status(args, 'binary found', self.equipement['id'])
+            return self.upgrade
+        else:
+            update_status(args, 'binary not found', self.equipement['id'])
+            return self.download
+
+    def download(self):
+        update_status(args, 'downloading binary', self.equipement['id'])
+        logger.debug("Downloading binary on %s" % self.equipement['name'])
+        path = 'ftp://%s/%s' % (random.choice(self.args.ftp_server),
+                                self.equipement['binary'])
+        if self.conn.download(path):
+            update_status(args, 'download ok', self.equipement['id'])
+            return self.upgrade
+        else:
+            update_status(args, 'download ko', self.equipement['id'])
+            return self.error
+
+    def upgrade(self):
+        update_status(args, 'upgrading', self.equipement['id'])
+        logger.debug("Upgrading %s" % self.equipement['name'])
+        if self.conn.upgrade(self.equipement['binary']):
+            update_status(args, 'upgrade ok', self.equipement['id'])
+            return self.provision
+        else:
+            update_status(args, 'upgrade ko', self.equipement['id'])
+            return self.error
+
+    def provision(self):
+        update_status(args, 'provisionning', self.equipement['id'])
+        logger.debug("Provisionning %s" % self.equipement['name'])
+        m = re.search('^slave(\d+)', self.equipement['template'])
+        if m:
+            id = m.group(1)
+            self.conn.provision(id)
+            return self.finished
+        else:
+            self.conn.provision(1)
+            return self.install
+
+    def install(self):
+        update_status(args, 'installing configuration', self.equipement['id'])
+        logger.debug("Installing %s"%self.equipement['name'])
+        if self.conn.copy_config(self.equipement['name'],
+                                 self.args.tftp_server):
+            update_status(args, 'installation ok', self.equipement['id'])
+            return self.finished
+        else:
+            update_status(args, 'installation error', self.equipement['id'])
+            return self.error
+
+    def finished(self):
+        update_status(args, 'completed', self.equipement['id'])
+        logger.debug("Finishing %s"%self.equipement['name'])
+        return None
+
+    def error(self):
+        update_status(args, 'error', self.equipement['id'])
+        logger.debug("Fatal error %s"%self.equipement['name'])
+        return None
 
 def test_equipement(queue, args):
     while run:
         try:
             equipement = queue.get(True, 1)
-            update_status(args, 'leased', equipement['id'])
-            conn = ClientIOSXE(equipement['ip'], args.sw_user, args.sw_pass)
-            logger.debug('%s Running' % equipement['name'])
-            if not conn.ping():
-                logger.debug('%s Ping KO' % equipement['name'])
-                push(queue, equipement, args)
-                update_status(args, 'ping ko', equipement['id'])
-                continue
-
-            logger.debug('%s Ping OK' % equipement['name'])
-            update_status(args, 'ping ok', equipement['id'])
-
-            try:
-                update_status(args, 'connecting', equipement['id'])
-                conn.connect()
-                update_status(args, 'connecting ok', equipement['id'])
-            except:
-                logger.debug('%s Connection KO' % equipement['name'])
-                update_status(args, 'connecting ko', equipement['id'])
-                push(queue, equipement, args)
-                continue
-
-            logger.info("%s Connection OK" % equipement['name'])
-
-            update_status(args, 'checking version', equipement['id'])
-            if not conn.check_version(equipement['version']):
-                update_status(args, 'version ko', equipement['id'])
-                logger.info("%s version KO %s" % (equipement['name'],
-                                                  equipement['version']))
-
-                update_status(args, 'checking for binary file',
-                              equipement['id'])
-                if not conn.file_exists(equipement['binary']):
-                    logger.info("%s Binary file not found" %
-                                equipement['name'])
-                    path = 'ftp://%s/%s' % (random.choice(args.ftp_server),
-                                            equipement['binary'])
-                    update_status(args, 'downloading binary', equipement['id'])
-                    if not conn.download(path):
-                        update_status(args, 'download failed',
-                                      equipement['id'])
-                        logger.debug('%s Binary download failed' %
-                                     equipement['name'])
-                        push(queue, equipement, args)
-                        conn.disconnect()
-                        continue
-                    else:
-                        update_status(args, 'download ok', equipement['id'])
-                        logger.debug('%s Binary download OK' %
-                                     equipement['name'])
-
-                logger.info("%s Binary found" % equipement['name'])
-                update_status(args, 'installing', equipement['id'])
-                conn.upgrade(equipement['binary'])
-                update_status(args, 'reloading', equipement['id'])
-            else:
-                logger.info("%s version OK" % equipement['name'])
-                update_status(args, 'version ok', equipement['id'])
-                m = re.search('^slave(\d+)', equipement['template'])
-                if m:
-                    id = m.group(1)
-                    update_status(args, 'provisionning slave',
-                                  equipement['id'])
-                    conn.provision(id)
-                    logger.info("%s provision OK" % equipement['name'])
-                    update_status(args, 'completed', equipement['id'])
-                    conn.disconnect()
-                else:
-                    update_status(args, 'provisionning', equipement['id'])
-                    conn.provision(1)
-                    update_status(args, 'copying conf', equipement['id'])
-                    if not conn.copy_config(equipement['name'],
-                                            args.tftp_server):
-                        update_status(args, 'copy conf error',
-                                      equipement['id'])
-                        logger.info("%s copy KO" % equipement['name'])
-                        push(queue, equipement, args)
-                        conn.disconnect()
-                    else:
-                        update_status(args, 'completed', equipement['id'])
-                        logger.info("%s copy OK" % equipement['name'])
-                        conn.disconnect()
-                        continue
+            method = InstallEquipement(equipement,args,queue).run()
+            while method != None:
+                method = method()
         except Queue.Empty:
             continue
         except Exception as e:
             print e
         queue.task_done()
-
 
 def load_list(args):
     url = '%s/equipements/index.json' % args.http_root
