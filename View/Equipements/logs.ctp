@@ -3,3 +3,17 @@
 <?php echo $content ?>
 </pre>
 </div>
+
+<script>
+function update() {
+    $.get("http://10.20.124.50/autoinstall/equipements/logs/2115",
+          "",
+          function(data){
+            $('pre')[0].innerHTML = $(data).children('pre')[0].innerHTML
+            setTimeout(function() {
+                $('body').scrollTop($('body').height())
+                }, 300)
+          })
+}
+setInterval(update,3000)
+</script>
