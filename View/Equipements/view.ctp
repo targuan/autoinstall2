@@ -36,16 +36,24 @@
     <?php
     echo $this->Html->link("Get configuration", array('controller' => 'equipements',
         'action' => 'get',
-        $equipement['Equipement']['id']));
+        $equipement['Equipement']['id']),
+        array('class'=>'button'));
     ?>
     <?php
     echo $this->Html->link("Edit", array('controller' => 'equipements',
         'action' => 'edit',
-        $equipement['Equipement']['id']));
+        $equipement['Equipement']['id']),
+        array('class'=>'button'));
     ?>
     <?php
     echo $this->Form->postLink(
-            'Delete', array('action' => 'delete', $equipement['Equipement']['id']), array('confirm' => 'Are you sure?')
+            'Delete', array('action' => 'delete', $equipement['Equipement']['id']), array('confirm' => 'Are you sure?','class'=>'button')
     );
+    ?>
+    <?php
+    echo $this->Html->link("View logs", array('controller' => 'equipements',
+        'action' => 'logs',
+        $equipement['Equipement']['id']),
+        array('class'=>'button'));
     ?>
 </div>
