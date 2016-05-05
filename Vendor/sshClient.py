@@ -62,9 +62,8 @@ def update_status(args, status, id):
     result = fp.read()
 
 
-
 class InstallEquipement:
-    def __init__(self,equipement,args,queue):
+    def __init__(self, equipement, args, queue):
         self.equipement = equipement
         self.args = args
         self.conn = ClientIOSXE(equipement['ip'], args.sw_user, args.sw_pass)
@@ -107,7 +106,8 @@ class InstallEquipement:
             return self.file_exists
 
     def file_exists(self):
-        update_status(args, 'verifying if binary exists', self.equipement['id'])
+        update_status(args, 'verifying if binary exists',
+                      self.equipement['id'])
         logger.debug("Verifying if binary is on %s" % self.equipement['name'])
         if self.conn.file_exists(self.equipement['binary']):
             update_status(args, 'binary found', self.equipement['id'])
@@ -152,7 +152,7 @@ class InstallEquipement:
 
     def install(self):
         update_status(args, 'installing configuration', self.equipement['id'])
-        logger.debug("Installing %s"%self.equipement['name'])
+        logger.debug("Installing %s" % self.equipement['name'])
         if self.conn.copy_config(self.equipement['name'],
                                  self.args.tftp_server):
             update_status(args, 'installation ok', self.equipement['id'])
@@ -163,17 +163,18 @@ class InstallEquipement:
 
     def finished(self):
         update_status(args, 'completed', self.equipement['id'])
-        logger.debug("Finishing %s"%self.equipement['name'])
+        logger.debug("Finishing %s" % self.equipement['name'])
         return self.disconnect
 
     def error(self):
         update_status(args, 'error', self.equipement['id'])
-        logger.debug("Fatal error %s"%self.equipement['name'])
+        logger.debug("Fatal error %s" % self.equipement['name'])
         return self.disconnect
 
     def disconnect(self):
         self.conn.disconnect()
         return None
+
 
 def test_equipement(queue, args):
     while run:
@@ -181,31 +182,33 @@ def test_equipement(queue, args):
             equipement = None
 
             with equipement_lock:
-                macs = [mac for mac in queue if queue[mac]['running'] == False]
+                macs = [mac for mac in queue if not queue[mac]['running']]
                 if len(macs) > 0:
                     equipement = queue[macs[0]]
                     equipement['running'] = True
 
-            if equipement == None:
+            if equipement is None:
                 time.sleep(1)
                 continue
 
-            method = InstallEquipement(equipement,args,queue).run()
-            while method != None:
+            method = InstallEquipement(equipement, args, queue).run()
+            while method is not None:
                 method = method()
             with equipement_lock:
                 del queue[equipement['mac']]
         except Exception as e:
             if equipement:
-                 with equipement_lock:
-                     equipement['running'] = False
+                with equipement_lock:
+                    equipement['running'] = False
             logger.warning(e)
+
 
 def load_list(args):
     url = '%s/equipements/index.json' % args.http_root
     fp = urllib2.urlopen(url)
     full_inventory = json.loads(fp.read())
-    filtered = {e['mac']: e for e in full_inventory if e['status'] != 'completed'}
+    filtered = {e['mac']: e for e in full_inventory
+                if e['status'] != 'completed'}
     return filtered
 
 
