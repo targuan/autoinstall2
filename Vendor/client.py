@@ -28,6 +28,7 @@ class Client:
         archivename = '/tmp/%s-%s' % (host, uuid.uuid1())
         self.archive = open(archivename, 'w')
         logger.debug('archiving to %s', archivename)
+        self.net_connect = None
 
     def send_command(self, command_string, delay_factor=.1, max_loops=150,
                      strip_prompt=True, strip_command=True):
@@ -151,7 +152,8 @@ class Client:
                 buf = self.send_command("y")
 
     def disconnect(self):
-        self.net_connect.disconnect()
+        if self.net_connect is not None:
+            self.net_connect.disconnect()
 
     def shut(self):
         self.net_connect.send_config_set(["interface range g1/0/1-24", "shut"])
@@ -162,14 +164,14 @@ class ClientIOSXE(Client):
     def upgrade(self, filename):
         fbuf = u''
         buf = self.send_command('software install file flash:%s' % filename)
-        if '%' in buf:
-            return False
         fbuf += buf
         while 'reload' not in fbuf:
             time.sleep(1)
             buf = self.clear_buffer()
             if buf is not None:
                 fbuf += buf
+            if '%' in fbuf:
+                return False
         if "Do you want to proceed with reload" in fbuf:
             buf = self.send_command('no')
             if buf is not None:
