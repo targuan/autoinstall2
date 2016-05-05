@@ -1,6 +1,5 @@
 #!/usr/bin/python
-import Queue
-from threading import Thread
+from threading import Thread, RLock
 import signal
 import os
 import socket
@@ -63,10 +62,6 @@ def update_status(args, status, id):
     result = fp.read()
 
 
-def push(queue, equipement, args):
-    if equipement['mac'] in args.leases.get_current():
-        logger.debug("Pushing back %s" % equipement['name'])
-        queue.put(equipement)
 
 class InstallEquipement:
     def __init__(self,equipement,args,queue):
@@ -88,7 +83,7 @@ class InstallEquipement:
             return self.connect
         else:
             update_status(args, 'ping ko', self.equipement['id'])
-            return self.push
+            return self.disconnect
 
     def connect(self):
         update_status(args, 'connecting', self.equipement['id'])
@@ -99,12 +94,7 @@ class InstallEquipement:
             return self.check_version
         except:
             update_status(args, 'Connection ko', self.equipement['id'])
-            return self.push
-
-    def push(self):
-        logger.debug("Queueing %s for retry" % self.equipement['name'])
-        push(self.queue, self.equipement, self.args)
-        return None
+            return self.disconnect
 
     def check_version(self):
         update_status(args, 'Checking version', self.equipement['id'])
@@ -136,7 +126,7 @@ class InstallEquipement:
             return self.upgrade
         else:
             update_status(args, 'download ko', self.equipement['id'])
-            return self.error
+            return self.disconnect
 
     def upgrade(self):
         update_status(args, 'upgrading', self.equipement['id'])
@@ -174,31 +164,48 @@ class InstallEquipement:
     def finished(self):
         update_status(args, 'completed', self.equipement['id'])
         logger.debug("Finishing %s"%self.equipement['name'])
-        return None
+        return self.disconnect
 
     def error(self):
         update_status(args, 'error', self.equipement['id'])
         logger.debug("Fatal error %s"%self.equipement['name'])
+        return self.disconnect
+
+    def disconnect(self):
+        self.conn.disconnect()
         return None
 
 def test_equipement(queue, args):
     while run:
         try:
-            equipement = queue.get(True, 1)
+            equipement = None
+
+            with equipement_lock:
+                macs = [mac for mac in queue if queue[mac]['running'] == False]
+                if len(macs) > 0:
+                    equipement = queue[macs[0]]
+                    equipement['running'] = True
+
+            if equipement == None:
+                time.sleep(1)
+                continue
+
             method = InstallEquipement(equipement,args,queue).run()
             while method != None:
                 method = method()
-        except Queue.Empty:
-            continue
+            with equipement_lock:
+                del queue[equipement['mac']]
         except Exception as e:
-            print e
-        queue.task_done()
+            if equipement:
+                 with equipement_lock:
+                     equipement['running'] = False
+            logger.warning(e)
 
 def load_list(args):
     url = '%s/equipements/index.json' % args.http_root
     fp = urllib2.urlopen(url)
     full_inventory = json.loads(fp.read())
-    filtered = [e for e in full_inventory if e['status'] != 'completed']
+    filtered = {e['mac']: e for e in full_inventory if e['status'] != 'completed'}
     return filtered
 
 
@@ -217,7 +224,8 @@ if __name__ == '__main__':
 
     args = parse_args()
     run = True
-    equipementList = Queue.Queue()
+    equipementList = {}
+    equipement_lock = RLock()
 
     logger.debug('Installing SIGINT handler')
     signal.signal(signal.SIGINT, stop_handler)
@@ -237,23 +245,12 @@ if __name__ == '__main__':
     while run:
         leases = args.leases.get_current()
         logger.debug('Found %d active leases' % len(leases))
-        currentLeasesList = set([(mac, leases[mac].ip) for mac in leases])
-        newLeases = currentLeasesList - leasesList
-        logger.debug('%d New leases' % len(newLeases))
-
-        if len(newLeases) > 0:
-            equipements = load_list(args)
-            for lease in newLeases:
-                eq = [e for e in equipements if e['mac'] == lease[0]]
-                if len(eq) > 0:
-                    eq[0]['ip'] = lease[1]
-                    logger.debug('Add %s to process list' % str(eq[0]))
-                    equipementList.put(eq[0])
-                    leasesList.add(lease)
-                else:
-                    logger.debug(
-                        'Lease for mac %s is not in the database or '
-                        'in finished state' % lease[0])
-        leasesList = currentLeasesList & leasesList
+        equipements = load_list(args)
+        with equipement_lock:
+            for mac in leases:
+                if mac in equipements and mac not in equipementList:
+                    equipements[mac]['ip'] = leases[mac].ip
+                    equipements[mac]['running'] = False
+                    equipementList[mac] = equipements[mac]
 
         time.sleep(1)
