@@ -21,13 +21,14 @@ logger.propagate = False
 
 class Client:
 
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, archive_file = None):
         self.host = host
         self.username = username
         self.password = password
-        archivename = '/tmp/%s-%s' % (host, uuid.uuid1())
-        self.archive = open(archivename, 'w')
-        logger.debug('archiving to %s', archivename)
+        if archive_file is None:
+            archive_file = '/tmp/%s-%s' % (host, uuid.uuid1())
+        self.archive = open(archive_file, 'a')
+        logger.debug('archiving to %s', archive_file)
         self.net_connect = None
 
     def send_command(self, command_string, delay_factor=.1, max_loops=150,

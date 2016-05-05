@@ -66,7 +66,9 @@ class InstallEquipement:
     def __init__(self, equipement, args, queue):
         self.equipement = equipement
         self.args = args
-        self.conn = ClientIOSXE(equipement['ip'], args.sw_user, args.sw_pass)
+        self.conn = ClientIOSXE(
+            equipement['ip'], args.sw_user, args.sw_pass,
+            '/var/lib/autoinstall/archive-%s' % equipement['mac'])
         self.queue = queue
 
     def run(self):

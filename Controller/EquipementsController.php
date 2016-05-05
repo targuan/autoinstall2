@@ -391,5 +391,28 @@ class EquipementsController extends AppController {
             return $this->redirect(array('action' => 'index'));
         }
     }
+    
+    public function logs($id) {
+        if (!$id) {
+            throw new NotFoundException(__('Invalid switch'));
+        }
+        
+        $equipement = $this->Equipement->find('first',
+                                              array('conditions'=>array('id'=>$id),
+                                                    'fields'=>array('Equipement.mac'),
+                                                    'contain' => false)
+                                             );
+        if (!$equipement) {
+            throw new NotFoundException(__('Invalid equipement'));
+        }
+        $mac = $equipement['Equipement']['mac'];
+        $file = "/var/lib/autoinstall/archive-$mac";
+        if(file_exists($file)) {
+            $content = file_get_contents($file);
+        } else {
+            $content = '';
+        }
+        $this->set('content',$content);
+    }
 
 }

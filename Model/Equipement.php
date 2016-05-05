@@ -26,5 +26,7 @@ class Equipement extends AppModel {
     );
     
     public $hasMany = 'Variable';
+    
+    public $actsAs = array('Containable');
 
 }
