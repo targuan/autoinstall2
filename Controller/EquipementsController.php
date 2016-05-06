@@ -375,10 +375,22 @@ class EquipementsController extends AppController {
                     if(!empty($empty)) {
                         $result['warning'][] = array($equipement['Equipement']['name'],'Variable empty',$empty);
                     }
+                    $missing = array();
+                    foreach(array('version','binary','binarymd5') as $variableName) {
+                        foreach($equipement['Variable'] as $variable) {
+                            if($variable['name'] == $variableName) continue 2;
+                        }
+                        $missing[] = $variableName;
+                    }
+                    if(!empty($missing)) {
+                        $result['warning'][] = array($equipement['Equipement']['name'],'Static variable not found',$missing);
+                    }
                     $configuration = self::getConfigurationFromTemplate($equipement);
                     if(preg_match_all('`<([^>]+)>`',$configuration,$res)) {
-                        $result['warning'][] = array($equipement['Equipement']['name'],'Variable not found',array_unique($res[1]));
-                    } else {
+                        $result['warning'][] = array($equipement['Equipement']['name'],'Template variable not found',array_unique($res[1]));
+                        $missing = array_merge($missing,array_unique($res[1]));
+                    } 
+                    if(empty($missing) && empty($empty)) {
                         $result['OK'][] = $equipement['Equipement']['name'];
                     }
                 } catch(Exception $e) {
