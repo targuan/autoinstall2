@@ -61,8 +61,9 @@ class TemplatesController extends AppController {
                 if(file_put_contents($template_file, $content)) {
                     $this->Flash->success('Template created');
                     return $this->redirect(array('action' => 'index'));
+                } else {
+                    $this->Flash->error('Template not created');
                 }
-                $this->Flash->error('Template not created');
             }
         }
         
@@ -74,5 +75,25 @@ class TemplatesController extends AppController {
         $this->set("content",$content);
         $this->set("name",$bname);
     }
+
+    public function delete() {
+        if ($this->request->is('post')) {
+            foreach($this->request->data['names'] as $name) {
+                $bname = basename($name);
+                $fname = WWW_ROOT . "documents" . DS . $bname;
+                if(file_exists($fname)) {
+                    if(!unlink($fname)) {
+                        $error = error_get_last();
+                        $this->Flash->error('Template ' . $fname . ' not deleted: '.$error['name']);
+                    }
+                    else {
+                        $this->Flash->success('Template ' . $fname . ' deleted');
+                    }
+                }
+            }
+        }
+        return $this->redirect(array('action' => 'index'));
+    }
+
 
 }
