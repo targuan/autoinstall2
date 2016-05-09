@@ -42,13 +42,6 @@ class ServicesController extends AppController {
         
     }
     
-    public function reloadtftp() {
-        $cmd = $this->Service->findByName('tftpdreload');
-        $this->exec($cmd);
-        return $this->redirect(array('action' => 'index'));
-        
-    }
-    
     public function generatedhcp() {
         $service = $this->Service->findByName('dhcpdtemplate');
         if(empty($service)) {
@@ -87,54 +80,6 @@ class ServicesController extends AppController {
         }
         file_put_contents($service['Service']['value'], $template);
         return $this->redirect(array('action' => 'reloaddhcp'));
-    }
-    
-    public function generatetftp() {
-        $service = $this->Service->findByName('tftpdroot');
-        
-        if(empty($service)) {
-            $this->Flash->error("I couldn't find the tftpd root path");
-            return $this->redirect(array('action' => 'index'));
-        }
-        $tftpdroot = $service['Service']['value'];
-         
-        $boottemplateservice = $this->Service->findByName('boottemplate');
-	if(empty($boottemplateservice)) {
-            $this->Flash->error("I couldn't find the boottemplate");
-            return $this->redirect(array('action' => 'index'));
-        }
-        $boottemplate = $boottemplateservice['Service']['value'];
-
-        $this->loadModel('Equipement');
-        $equipements = $this->Equipement->find('all');
-        
-        $network = "";
-        
-        foreach($equipements as $equipement) {
-            $ip = $equipement['Equipement']['ip'];
-            $network .= "ip host {$equipement['Equipement']['name']} {$ip}\n";
-            file_put_contents("$tftpdroot/{$equipement['Equipement']['name']}-confg",$boottemplate);
-            
-            $template_name = $equipement['Equipement']['template'];
-            if(strpos($template_name,"slave")===0) {
-                continue;
-            }
-            
-            $template = file_get_contents(WWW_ROOT . DS . "documents" . DS . $template_name);
-            foreach($equipement['Equipement'] as $key=>$value) {
-                $template = str_replace("<$key>",$value,$template);
-            }
-            foreach($equipement['Variable'] as $variable) {
-                $template = str_replace("<{$variable['name']}>",$variable['value'],$template);
-            }
-            file_put_contents("$tftpdroot/fullconfig/{$equipement['Equipement']['name']}-confg",$template);
-            
-        }
-        
-        file_put_contents("$tftpdroot/network-confg", $network);
-        
-        $this->Flash->success('Files generated');
-        return $this->redirect(array('action' => 'index'));
     }
     
     public function edit() {
