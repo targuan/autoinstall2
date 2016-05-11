@@ -133,7 +133,7 @@ class EquipementsController extends AppController {
                 }
                 $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
 
-                foreach (array('name', 'template', 'mac','ip','status') as $key) {
+                foreach (array('name', 'template', 'mac','status') as $key) {
                     if (!isset($variables[$key]) or empty($variables[$key])) {
                         if($key == 'status') continue;
                         throw new InternalErrorException("$key not found at line $n");
@@ -321,13 +321,10 @@ class EquipementsController extends AppController {
             $equipements = $this->Equipement->find('all', array(
                 "conditions" => array("Equipement.id" => $this->request->data['ids'])
             ));
-            $networkconfg = "";
             foreach ($equipements as $equipement) {
                 $zip->addFromString("{$equipement['Equipement']['name']}-confg", self::getConfigurationFromTemplate($equipement));
-                $networkconfg .= "ip host {$equipement['Equipement']['name']} {$equipement['Equipement']['ip']}\n";
             }
             
-            $zip->addFromString("network-confg", "$networkconfg");
             if ($zip->close()) {
                 $this->response->download('configurations.zip');
                 $this->response->file($filename);

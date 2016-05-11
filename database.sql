@@ -17,7 +17,6 @@ CREATE TABLE `equipements` (
   `mac` char(17) DEFAULT NULL,
   `template` varchar(255) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
-  `ip` varchar(255) DEFAULT NULL,
   `status` varchar(255) DEFAULT 'init',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1232 DEFAULT CHARSET=latin1;

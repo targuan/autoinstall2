@@ -66,7 +66,6 @@ class ServicesController extends AppController {
         $equipements = $this->Equipement->find('all');
         $content = "";
         foreach($equipements as $equipement) {
-            $ip = $equipement['Equipement']['ip'];
             $name = $equipement['Equipement']['name'];
             $mac = $equipement['Equipement']['mac'];
             $content .= "subclass \"switchs\" 1:$mac;\n";
