@@ -92,4 +92,14 @@ class ServicesController extends AppController {
             }
         }
     }
+    
+    public function viewdhcpconf() {
+        $service = $this->Service->findByName('dhcpdconffile');
+        if(empty($service)) {
+            $this->Flash->error("I couldn't find the dhcpd conf file path");
+            return $this->redirect(array('action' => 'index'));
+        }
+        $conf = file_get_contents($service['Service']['value']);
+        $this->set('conf',$conf);
+    }
 }

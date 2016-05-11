@@ -8,6 +8,7 @@
     <p>
         <?php echo $this->Html->link('Reload', array('action' => 'reloaddhcp'),array("class"=>"button")); ?>
         <?php echo $this->Html->link('Generate', array('action' => 'generatedhcp'),array("class"=>"button")); ?>
+        <?php echo $this->Html->link('View conf', array('action' => 'viewdhcpconf'),array("class"=>"button")); ?>
     </p>
 </div>
 
