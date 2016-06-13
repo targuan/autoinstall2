@@ -22,6 +22,12 @@ class EquipementsController extends AppController {
 
         $bname = basename($equipement['Equipement']['template']);
         $template_file = WWW_ROOT . "documents" . DS . $bname;
+
+
+        if(preg_match('`slave\d+`',$equipement['Equipement']['template'])) {
+            return "";
+        }
+
         if (!is_file($template_file)) {
             throw new NotFoundException("$template_file not found");
         }
