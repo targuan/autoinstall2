@@ -19,9 +19,11 @@ class EquipementsController extends AppController {
 
     private static function getConfigurationFromTemplate($equipement) {
         $template = "";
-
-        $bname = basename($equipement['Equipement']['template']);
-        $template_file = WWW_ROOT . "documents" . DS . $bname;
+        $template_file = WWW_ROOT . "documents" . DS . "equipements" . DS . $equipement['Equipement']['name'] . '.conf';
+        if (!is_file($template_file)) {
+            $bname = basename($equipement['Equipement']['template']);
+            $template_file = WWW_ROOT . "documents" . DS . $bname;
+        }
 
 
         if(preg_match('`slave\d+`',$equipement['Equipement']['template'])) {
@@ -137,7 +139,7 @@ class EquipementsController extends AppController {
                     $vmac += $delta;
                     $mac = substr($mac, 0, 6) . str_pad(dechex($vmac), 6, "0", STR_PAD_LEFT);
                 }
-                $variables['mac'] = substr(chunk_split($mac, 2, ':'), 0, 17);
+                $variables['mac'] = strtolower(substr(chunk_split($mac, 2, ':'), 0, 17));
 
                 foreach (array('name', 'template', 'mac','status') as $key) {
                     if (!isset($variables[$key]) or empty($variables[$key])) {
@@ -249,7 +251,7 @@ class EquipementsController extends AppController {
         if (!is_file($template_file)) {
             throw new NotFoundException("$template_file not found");
         }
-        $template = file_get_contents($template_file);
+        $template = $this->getConfigurationFromTemplate($equipement);
 
         preg_match_all('`<([^>]+)>`', $template, $res);
         $variables = array_unique($res[1]);

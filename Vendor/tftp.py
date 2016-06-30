@@ -19,7 +19,7 @@ logger.addHandler(ch)
 logger.propagate = False
 
 
-logging.getLogger('tftpy').setLevel(500)
+logging.getLogger('tftpy').setLevel(logging.CRITICAL)
 
 
 class TFTPServer:
@@ -42,7 +42,7 @@ class TFTPServer:
             for mac in leases:
                 file += "ip host boot%i %s\n" % (i, leases[mac].ip)
                 i += 1
-        elif re.match('(router|boot\d*)-confg',filename):
+        elif re.match('(dhcp.*|router|boot\d*)-confg',filename):
             try:
                 fp = urllib2.urlopen(
                     '%s/parameters/get/boottemplate' % self.httproot)

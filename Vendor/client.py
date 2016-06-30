@@ -45,6 +45,16 @@ class Client:
             ret = self.net_connect.strip_prompt(ret)
         return ret
 
+    def send_config_set(self, config_commands=None, exit_config_mode=True,
+                        delay_factor=.1, max_loops=150, strip_prompt=False,
+                        strip_command=False):
+        self.archive.write('\n'.join(config_commands))
+        ret = self.net_connect.send_config_set(config_commands,
+            exit_config_mode, delay_factor, max_loops, strip_prompt, 
+            strip_command)
+        self.archive.write(ret)
+        return ret
+
     def clear_buffer(self):
         ret = self.net_connect.clear_buffer()
         if ret is not None:
@@ -98,13 +108,13 @@ class Client:
         return False
 
     def download(self, filename):
-        buf = self.send_command('copy %s flash:' % (filename))
+        buf = self.send_command('copy %s flash:' % (filename),delay_factor=.1,max_loops=10)
         if buf is None:
             fbuf = ''
         else:
             fbuf = buf
         while 'Error' not in fbuf and 'OK' not in fbuf:
-            time.sleep(0.1)
+            time.sleep(1)
             buf = self.clear_buffer()
             if buf is not None:
                 fbuf += buf
@@ -119,15 +129,13 @@ class Client:
 
     def copy_config(self, name, tftp_server):
         fbuf = ''
-        cmd = 'copy tftp://%s/%s-confg startup-config' % (tftp_server, name)
+        self.send_command("wr mem")
+        cmd = 'copy tftp://%s/%s-confg nvram:/startup-config' % (tftp_server, name)
         buf = self.send_command(cmd,
                                 strip_command=False,
                                 strip_prompt=False,
-                                delay_factor=5)
+                                delay_factor=.5,max_loops=10)
         fbuf = buf if buf is not None else ''
-        if 'Destination filename' in buf:
-            buf = self.send_command('')
-            fbuf += buf if buf is not None else ''
         while 'Error' not in fbuf and 'OK' not in fbuf:
             time.sleep(1)
             buf = self.clear_buffer()
@@ -137,19 +145,19 @@ class Client:
         return False
 
     def provision(self, number):
-        if number == 1:
-            self.send_command('switch %s priority 15' % number)
-        elif number == 2:
-            self.send_command('switch %s priority 14' % number)
-        else:
-            self.send_command('switch %s priority 1' % number)
-        self.send_command('y')
         buf = self.send_command('show switch')
         m = re.search('\*(\d+)', buf)
         if m:
             id = m.group(1)
+            if number == 1:
+                self.send_command('switch %s priority 15' % id,delay_factor=.1, max_loops=15)
+            elif number == 2:
+                self.send_command('switch %s priority 14' % id,delay_factor=.1, max_loops=15)
+            else:
+                self.send_command('switch %s priority 1' % id,delay_factor=.1, max_loops=15)
+            self.send_command('y')
             if id != number:
-                buf = self.send_command("switch %s renumber %s" % (id, number))
+                buf = self.send_command("switch %s renumber %s" % (id, number),delay_factor=.1, max_loops=15)
                 buf = self.send_command("y")
 
     def disconnect(self):
@@ -158,6 +166,13 @@ class Client:
 
     def shut(self):
         self.net_connect.send_config_set(["interface range g1/0/1-24", "shut"])
+
+    @staticmethod
+    def getClient(clientOs):
+        if clientOs == 'ios':
+            return ClientIOS
+        elif clientOs == 'iosxe':
+            return ClientIOSXE
 
 
 class ClientIOSXE(Client):
@@ -182,3 +197,29 @@ class ClientIOSXE(Client):
             if buf is not None:
                 fbuf += buf
         return True
+
+class ClientIOS(Client):
+
+    def upgrade(self, filename):
+        fbuf = u''
+        self.send_config_set(['boot system flash:/%s'%filename])
+        return True
+
+    def provision(self, number):
+        cmdset = []
+        buf = self.send_command('show switch')
+        m = re.search('\*(\d+)', buf)
+        if m:
+            id = m.group(1)
+            if id != number:
+                cmdset.append("switch %s renumber %s" % (id, number))
+                cmdset.append('y')
+            if number == 1:
+                cmdset.append('switch %s priority 15' % id)
+            elif number == 2:
+                cmdset.append('switch %s priority 14' % id)
+            else:
+                cmdset.append('switch %s priority 1' % id)
+            cmdset.append('y')
+        self.send_config_set(cmdset)
+

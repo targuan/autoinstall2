@@ -17,7 +17,7 @@ import logging
 from isc_dhcp_leases.iscdhcpleases import Lease, IscDhcpLeases
 
 
-from client import ClientIOSXE
+from client import Client
 
 
 def stop_handler(signum, frame):
@@ -66,7 +66,12 @@ class InstallEquipement:
     def __init__(self, equipement, args, queue):
         self.equipement = equipement
         self.args = args
-        self.conn = ClientIOSXE(
+        clientName = equipement['client']
+        if clientName is None:
+            clientName = 'iosxe'
+        client = Client.getClient(clientName)
+        
+        self.conn = client(
             equipement['ip'], args.sw_user, args.sw_pass,
             '/var/lib/autoinstall/archive-%s' % equipement['mac'])
         self.queue = queue

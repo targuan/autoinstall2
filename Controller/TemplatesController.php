@@ -15,7 +15,14 @@ App::uses('AppController', 'Controller');
 class TemplatesController extends AppController {
 
     public function index() {
-        $templates = glob(WWW_ROOT . "documents" . DS . "*.conf");
+        if(isset ($this->request->params['equipements']) && $this->request->params['equipements']) {
+            $subdir = DS . 'equipements';
+            $this->set('controller','equipementTemplates');
+        } else {
+            $subdir = '';
+            $this->set('controller','templates');
+        }
+        $templates = glob(WWW_ROOT . "documents" . $subdir . DS . "*.conf");
         $list = array();
         foreach ($templates as $template) {
             $pos = strrpos($template, "/");
@@ -25,20 +32,28 @@ class TemplatesController extends AppController {
     }
 
     public function edit($name) {
+        if(isset ($this->request->params['equipements']) && $this->request->params['equipements']) {
+            $subdir = DS . 'equipements';
+            $controller = 'equipementTemplates';
+        } else {
+            $subdir = '';
+            $controller = 'templates';
+        }
+        $this->set('controller', $controller);
         $bname = basename($name);
-        $template_file = WWW_ROOT . "documents" . DS . $bname;
+        $template_file = WWW_ROOT . "documents" . $subdir . DS . $bname;
         if (!is_file($template_file)) {
             throw new NotFoundException("$template_file not found");
         }
         if ($this->request->is(array('post', 'put'))) {
             if ($this->request->data['delete']) {
                 unlink($template_file);
-                return $this->redirect(array('action' => 'index'));
+                return $this->redirect(array('controller'=>$controller, 'action' => 'index'));
             } elseif (isset($this->request->data['content'])) {
                 $content = $this->request->data['content'];
                 $this->set("content", $content);
                 file_put_contents($template_file, $content);
-                return $this->redirect(array('action' => 'index'));
+                return $this->redirect(array('controller'=>$controller,'action' => 'index'));
             }
         }
         $content = file_get_contents($template_file);
@@ -47,6 +62,14 @@ class TemplatesController extends AppController {
     }
 
     public function add() {
+        if(isset ($this->request->params['equipements']) && $this->request->params['equipements']) {
+            $subdir = DS . 'equipements';
+            $controller = 'equipementTemplates';
+        } else {
+            $subdir = '';
+            $controller = 'templates';
+        }
+        $this->set('controller', $controller);
         if ($this->request->is(array('post', 'put')) && isset($this->request->data['content'])) {
             $bname = basename($this->request->data['name']);
             $content = $this->request->data['content'];
@@ -55,12 +78,12 @@ class TemplatesController extends AppController {
             }elseif(substr($bname,-5) != '.conf') {
                 $this->Flash->error('Template filename must end with .conf');
             } else {
-                $template_file = WWW_ROOT . "documents" . DS . $bname;
+                $template_file = WWW_ROOT . "documents" . $subdir . DS . $bname;
 
                 $this->set("content", $content);
                 if(file_put_contents($template_file, $content)) {
                     $this->Flash->success('Template created');
-                    return $this->redirect(array('action' => 'index'));
+                    return $this->redirect(array('controller'=>$controller,'action' => 'index'));
                 } else {
                     $this->Flash->error('Template not created');
                 }
@@ -77,10 +100,19 @@ class TemplatesController extends AppController {
     }
 
     public function delete() {
+        if(isset ($this->request->params['equipements']) && $this->request->params['equipements']) {
+            $subdir = DS . 'equipements';
+            $controller = 'equipementTemplates';
+        } else {
+            $subdir = '';
+            $controller = 'templates';
+        }
+        $this->set('controller', $controller);
+
         if ($this->request->is('post')) {
             foreach($this->request->data['names'] as $name) {
                 $bname = basename($name);
-                $fname = WWW_ROOT . "documents" . DS . $bname;
+                $fname = WWW_ROOT . "documents" . $subdir . DS . $bname;
                 if(file_exists($fname)) {
                     if(!unlink($fname)) {
                         $error = error_get_last();
@@ -92,7 +124,7 @@ class TemplatesController extends AppController {
                 }
             }
         }
-        return $this->redirect(array('action' => 'index'));
+        return $this->redirect(array('controller'=>$controller, 'action' => 'index'));
     }
 
 

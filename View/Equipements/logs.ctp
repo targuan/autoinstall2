@@ -6,7 +6,7 @@
 
 <script>
 function update() {
-    $.get("http://10.20.124.50/autoinstall/equipements/logs/2115",
+    $.get(window.location.pathname,
           "",
           function(data){
             $('pre')[0].innerHTML = $(data).children('pre')[0].innerHTML

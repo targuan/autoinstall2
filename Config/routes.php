@@ -32,6 +32,9 @@ Router::parseExtensions('json');
  * ...and connect the rest of 'Pages' controller's URLs.
  */
 	Router::connect('/pages/*', array('controller' => 'pages', 'action' => 'display'));
+	Router::connect('/equipementTemplates', array('controller' => 'templates','equipements' => true));
+	Router::connect('/equipementTemplates/:action', array('controller' => 'templates','equipements' => true));
+	Router::connect('/equipementTemplates/:action/*', array('controller' => 'templates','equipements' => true));
 
 /**
  * Load all plugin routes. See the CakePlugin documentation on
